@@ -10,7 +10,9 @@
     "lint": "tsc --noEmit",
     "test:rules": "mocha --timeout 20000 \"tests/firestore.rules.test.mjs\"",
     "test:rules:ci": "firebase emulators:exec --only firestore \"npm run test:rules\"",
-    "migrate:businesses": "node scripts/migrate-businesses.mjs"
+    "migrate:businesses": "node scripts/migrate-businesses.mjs",
+    "install:cf": "npm ci --legacy-peer-deps",
+    "build:cf": "npm ci --legacy-peer-deps && npm run build"
   },
   "dependencies": {
     "@google/genai": "latest",

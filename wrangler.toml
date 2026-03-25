@@ -1,0 +1,10 @@
+name = "iraq-compass-production"
+compatibility_date = "2026-03-25"
+compatibility_flags = ["nodejs_compat"]
+
+[build]
+command = "npm run build:cf"
+
+[vars]
+NODE_VERSION = "22.16.0"
+NPM_FLAGS = "--legacy-peer-deps"
