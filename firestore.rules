@@ -82,9 +82,7 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return isAuthenticated() &&
-        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
-          (request.auth.token.email == "safari.bosafar@gmail.com" && request.auth.token.email_verified == true));
+      return isAuthenticated() && request.auth.token.admin == true;
     }
 
     function hasRequiredFields(fields) {
@@ -168,7 +166,7 @@ service cloud.firestore {
              data.rating is number &&
              data.review_count is int &&
              data.verified is bool &&
-             data.updatedAt is timestamp;
+             (data.updatedAt is timestamp || data.updatedAt == request.time);
     }
 
     // ===============================================================
@@ -187,9 +185,10 @@ service cloud.firestore {
       allow create: if isAuthenticated() && 
                       get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'owner' &&
                       isValidPost(request.resource.data) &&
+                      request.resource.data.id == postId &&
                       request.resource.data.businessId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.businessId;
       allow update: if isAuthenticated() && (
-                      (request.resource.data.businessId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.businessId && isValidPost(request.resource.data)) ||
+                      (request.resource.data.businessId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.businessId && request.resource.data.id == postId && isValidPost(request.resource.data)) ||
                       (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes']) && math.abs(request.resource.data.likes - resource.data.likes) == 1) ||
                       isAdmin()
                     );
