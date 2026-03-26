@@ -1,6 +1,7 @@
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { supabase } from './supabase';
 import type { Business, Post, User, BusinessPostcard } from '../types';
+import { logger } from './logger';
 
 export enum OperationType {
   CREATE = 'create',
@@ -32,8 +33,8 @@ async function handleSupabaseError(error: unknown, operationType: OperationType,
     operationType,
     path,
   };
-  console.error('Supabase Error:', JSON.stringify(errInfo));
-  throw new Error(JSON.stringify(errInfo));
+  logger.error('Supabase request failed', errInfo);
+  throw new Error(`Database operation failed (${operationType})`);
 }
 
 const toDate = (value: string | Date | null | undefined) => (value ? new Date(value) : new Date());
@@ -216,20 +217,7 @@ export const api = {
       const { data: existingUser, error } = await supabase.from('users').select('*').eq('id', authUser.id).maybeSingle();
       if (error) throw error;
 
-      const isAdminEmail = authUser.email === 'safaribosafar@gmail.com';
-
       if (existingUser) {
-        if (isAdminEmail && existingUser.role !== 'admin') {
-          const { data: updatedUser, error: updateError } = await supabase
-            .from('users')
-            .update({ role: 'admin' })
-            .eq('id', authUser.id)
-            .select('*')
-            .single();
-          if (updateError) throw updateError;
-          return updatedUser as User;
-        }
-
         return existingUser as User;
       }
 
@@ -238,7 +226,7 @@ export const api = {
         name: authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || 'User',
         email: authUser.email || '',
         avatar: authUser.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${authUser.id}`,
-        role: isAdminEmail ? ('admin' as any) : requestedRole,
+        role: requestedRole,
         businessId: requestedRole === 'owner' ? `b_${authUser.id}` : undefined,
       };
 
