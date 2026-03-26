@@ -24,7 +24,6 @@
     "noEmit": true
   },
   "exclude": [
-    "vite.config.ts",
-    "worker"
+    "vite.config.ts"
   ]
 }

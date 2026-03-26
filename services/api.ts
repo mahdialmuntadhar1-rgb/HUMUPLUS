@@ -39,83 +39,61 @@ async function handleSupabaseError(error: unknown, operationType: OperationType,
 
 const toDate = (value: string | Date | null | undefined) => (value ? new Date(value) : new Date());
 
-const workerApiBase = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
-
-function buildWorkerApiUrl(path: string): string {
-  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-  if (workerApiBase) {
-    return `${workerApiBase}${normalizedPath}`;
-  }
-  return normalizedPath;
-}
-
-async function parseWorkerJson<T>(response: Response): Promise<T> {
-  if (!response.ok) {
-    throw new Error(`Worker API request failed with status ${response.status}`);
-  }
-  return response.json() as Promise<T>;
-}
-
-interface WorkerListResponse {
-  data: Business[];
-  meta: {
-    page: number;
-    limit: number;
-    total?: number;
-  };
-}
-
 export const api = {
   async getBusinesses(params: { category?: string; city?: string; governorate?: string; lastDoc?: number; limit?: number; featuredOnly?: boolean; ratingMin?: number } = {}) {
-    const path = '/api/businesses';
+    const path = 'businesses';
     try {
       const limit = params.limit || 20;
       const offset = params.lastDoc || 0;
-      const page = Math.floor(offset / limit) + 1;
 
-      const requestUrl = new URL(buildWorkerApiUrl(path), window.location.origin);
-      requestUrl.searchParams.set('page', String(page));
-      requestUrl.searchParams.set('limit', String(limit));
+      const { data, error } = await supabase
+        .from('businesses')
+        .select('*')
+        .limit(50);
 
-      if (params.category && params.category !== 'all') {
-        requestUrl.searchParams.set('category', params.category);
+      if (error) {
+        throw error;
       }
 
-      if (params.governorate && params.governorate !== 'all') {
-        requestUrl.searchParams.set('governorate', params.governorate);
-      }
-
-      if (params.city?.trim()) {
-        requestUrl.searchParams.set('q', params.city.trim());
-      }
-
-      const response = await fetch(requestUrl.toString(), { method: 'GET' });
-      const payload = await parseWorkerJson<WorkerListResponse>(response);
-      let normalized = (payload.data || []).map((business: any) => ({
+      let normalized = (data || []).map((business: any) => ({
         ...business,
         isVerified: business.isVerified ?? business.verified ?? false,
       })) as Business[];
+
+      if (params.category && params.category !== 'all') {
+        normalized = normalized.filter((business) => business.category === params.category);
+      }
+
+      if (params.governorate && params.governorate !== 'all') {
+        normalized = normalized.filter((business) => business.governorate === params.governorate);
+      }
+
+      if (params.city?.trim()) {
+        const q = params.city.trim().toLowerCase();
+        normalized = normalized.filter((business) =>
+          (business.city || '').toLowerCase().includes(q) ||
+          (business.name || '').toLowerCase().includes(q)
+        );
+      }
 
       if (params.featuredOnly) {
         normalized = normalized.filter((business) => business.isFeatured === true);
       }
 
       if (params.ratingMin && params.ratingMin > 0) {
-        normalized = normalized.filter((business) => (business.rating || 0) >= params.ratingMin!);
+        normalized = normalized.filter((business) => (business.rating || 0) >= params.ratingMin);
       }
 
-      const totalCount = typeof payload.meta.total === 'number' ? payload.meta.total : normalized.length;
+      const paged = normalized.slice(offset, offset + limit);
 
       return {
-        data: normalized,
-        lastDoc: offset + normalized.length,
-        hasMore: typeof payload.meta.total === 'number'
-          ? offset + normalized.length < payload.meta.total
-          : normalized.length === limit,
-        totalCount,
+        data: paged,
+        lastDoc: offset + paged.length,
+        hasMore: offset + paged.length < normalized.length,
+        totalCount: normalized.length,
       };
     } catch (error) {
-      logger.error('Worker API businesses request failed', {
+      logger.error('Supabase businesses request failed', {
         error: error instanceof Error ? error.message : String(error),
         operationType: OperationType.GET,
         path,
