@@ -1,49 +1,34 @@
 import React, { useState } from 'react';
-import { X } from './icons';
+import { X, User } from './icons';
 import { useTranslations } from '../hooks/useTranslations';
-import { supabase } from '../services/supabase';
+import { auth } from '../firebase';
+import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 
 interface AuthModalProps {
     onClose: () => void;
-    onAuthStarted: () => void;
+    onLogin: (role: 'user' | 'owner') => void;
 }
 
-export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onAuthStarted }) => {
+export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onLogin }) => {
     const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signin');
     const [role, setRole] = useState<'user' | 'owner'>('user');
     const [isLoading, setIsLoading] = useState(false);
-    const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const { t } = useTranslations();
     
     const handleGoogleSignIn = async () => {
         setIsLoading(true);
-        setErrorMessage(null);
         try {
+            // Store the role in sessionStorage BEFORE triggering the popup
+            // to ensure onAuthStateChanged picks it up correctly.
             sessionStorage.setItem('pending_role', role);
-
-            const { error } = await supabase.auth.signInWithOAuth({
-                provider: 'google',
-                options: {
-                    redirectTo: window.location.origin,
-                    queryParams: {
-                        access_type: 'offline',
-                        prompt: 'consent',
-                    },
-                },
-            });
-
-            if (error) {
-                throw error;
-            }
-            onAuthStarted();
+            
+            const provider = new GoogleAuthProvider();
+            await signInWithPopup(auth, provider);
+            onLogin(role);
         } catch (error) {
             console.error('Google Sign-In Error:', error);
+            // Clear the pending role if sign-in fails
             sessionStorage.removeItem('pending_role');
-            setErrorMessage(
-              error instanceof Error
-                ? error.message
-                : 'Google sign-in failed. Please check your connection and try again.',
-            );
         } finally {
             setIsLoading(false);
         }
@@ -62,11 +47,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onAuthStarted }) 
                 <p className="text-white/60 text-sm mb-8">
                     {activeTab === 'signin' ? 'Welcome back to Iraq Compass' : 'Join the Social Business Ecosystem'}
                 </p>
-                {errorMessage && (
-                    <div className="mb-4 rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-                        {errorMessage}
-                    </div>
-                )}
 
                 <div className="space-y-6">
                     {activeTab === 'signup' && (
@@ -99,7 +79,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onAuthStarted }) 
                             <div className="w-5 h-5 border-2 border-black/20 border-t-black rounded-full animate-spin" />
                         ) : (
                             <>
-                                <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="w-5 h-5" />
+                                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />
                                 <span>Continue with Google</span>
                             </>
                         )}

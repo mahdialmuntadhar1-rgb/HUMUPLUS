@@ -88,7 +88,7 @@ export const PersonalizedEvents: React.FC = () => {
                   <div className="p-5">
                     <h3 className="text-white font-semibold text-lg mb-2 line-clamp-2">{event.title}</h3>
                     <div className="space-y-2 text-sm text-white/60 mb-4">
-                      <div className="flex items-center gap-2"><MapPin className="w-4 h-4" />{event.venue || (t('common.notAvailable') || 'N/A')}</div>
+                      <div className="flex items-center gap-2"><MapPin className="w-4 h-4" />{event.venue || event.location}</div>
                       <div className="flex items-center gap-2"><Clock className="w-4 h-4" />{event.date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
                       <div className="flex items-center gap-2"><Users className="w-4 h-4" />{event.attendees} {t('events.going')}</div>
                     </div>

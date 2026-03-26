@@ -1,10 +1,20 @@
 import React from 'react';
-import type { Story, Category, Event, Deal, HeroSlide } from './types';
+import type { User, Story, Category, Business, Event, Deal, HeroSlide } from './types';
+// FIX: Added 'Briefcase' to the import list from './components/icons' to make it available for use in this file.
 import {
   Utensils, Coffee, ShoppingBag, Bed, Film, Music, Palette, Dumbbell, Car,
   Hospital, Landmark, Siren, Accessibility, Baby, Users2, Languages, Briefcase,
   Grid3x3
 } from './components/icons';
+
+// Mock User
+export const mockUser: User = {
+  id: 'u1',
+  name: 'Salar Ali',
+  email: 'salar.ali@example.com',
+  avatar: 'https://i.pravatar.cc/150?u=salarali',
+  role: 'user'
+};
 
 // Hero Slides
 export const heroSlides: HeroSlide[] = [
@@ -244,7 +254,7 @@ export const categories: Category[] = [
 ];
 
 // Businesses
-export const businesses = [
+export const businesses: Business[] = [
   {
     id: '1',
     name: 'Rotana Erbil Hotel',
@@ -1145,7 +1155,7 @@ export const translations = {
             nearYou: "Near You",
             friendsGoing: "Friends Going"
         },
-        aiPick: "Staff Pick",
+        aiPick: "AI Pick",
         going: "going",
         free: "FREE",
         viewDetails: "View Details",
@@ -1157,7 +1167,7 @@ export const translations = {
         claimNow: "Claim Now",
     },
     cityGuide: {
-        title: "City Guide",
+        title: "AI-Powered City Guide",
         planJourney: "Plan Your Journey",
         searchPlaces: "e.g., a one-day trip in Baghdad",
         generateJourney: "Generate",
@@ -1487,7 +1497,7 @@ export const translations = {
             nearYou: "بالقرب منك",
             friendsGoing: "الأصدقاء ذاهبون"
         },
-        aiPick: "اختيار الفريق",
+        aiPick: "اختيار الذكاء الاصطناعي",
         going: "ذاهبون",
         free: "مجاني",
         viewDetails: "عرض التفاصيل",
@@ -1499,7 +1509,7 @@ export const translations = {
         claimNow: "احصل على العرض الآن",
     },
     cityGuide: {
-        title: "دليل المدينة",
+        title: "دليل المدينة بالذكاء الاصطناعي",
         planJourney: "خطط لرحلتك",
         searchPlaces: "مثال: رحلة ليوم واحد في بغداد",
         generateJourney: "إنشاء",
@@ -1829,7 +1839,7 @@ export const translations = {
             nearYou: "نزیک تۆ",
             friendsGoing: "هاوڕێیان دەچن"
         },
-        aiPick: "هەڵبژاردەی تیم",
+        aiPick: "هەڵبژاردەی AI",
         going: "دەچن",
         free: "بێبەرامبەر",
         viewDetails: "بینینی وردەکارییەکان",

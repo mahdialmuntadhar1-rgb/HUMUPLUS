@@ -11,7 +11,6 @@ interface SubcategoryModalProps {
 }
 
 const AccordionItem: React.FC<{
-  key?: string | number;
   group: Subcategory,
   category: Category,
   onSubcategorySelect: (category: Category, subcategory: Subcategory) => void,
