@@ -236,7 +236,7 @@ export const api = {
         id: authUser.id,
         name: authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || 'User',
         email: authUser.email || '',
-        avatar: authUser.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${authUser.id}`,
+        avatar: authUser.user_metadata?.avatar_url || `https://www.gravatar.com/avatar/${authUser.id}?d=identicon`,
         role: requestedRole,
         businessId: requestedRole === 'owner' ? `b_${authUser.id}` : undefined,
       };
