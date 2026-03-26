@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { categories } from '../constants';
-import { api } from '../services/api';
+import { listBusinesses } from '../services/businesses';
 import type { Business } from '../types';
 import { Star, Grid3x3, List, MapPin, CheckCircle, ArrowLeft } from './icons';
 import { useTranslations } from '../hooks/useTranslations';
@@ -96,29 +96,39 @@ export const BusinessDirectory: React.FC<BusinessDirectoryProps> = ({ initialFil
     setIsLoading(true);
     setError(null);
     try {
-        const result = await api.getBusinesses({
-            category: filters.category,
-            city: filters.city,
-            governorate: filters.governorate,
-            ratingMin: filters.rating,
-            lastDoc: isLoadMore ? lastDoc : undefined,
-            limit: pageSize
+        const currentOffset = isLoadMore ? (lastDoc ?? 0) : 0;
+        const page = Math.floor(currentOffset / pageSize) + 1;
+
+        const result = await listBusinesses({
+            q: filters.city,
+            category: filters.category === 'all' ? undefined : filters.category,
+            governorate: filters.governorate === 'all' ? undefined : filters.governorate,
+            page,
+            limit: pageSize,
         });
-        
+
+        let data = result.data;
+        if (filters.rating > 0) {
+          data = data.filter((business) => (business.rating || 0) >= filters.rating);
+        }
+
         if (isLoadMore) {
             setBusinessesData(prev => {
-                const merged = [...prev, ...result.data];
+                const merged = [...prev, ...data];
                 const unique = new Map<string | number, Business>();
                 merged.forEach((item) => unique.set(item.id, item));
                 return Array.from(unique.values());
             });
         } else {
-            setBusinessesData(result.data);
+            setBusinessesData(data);
         }
-        
-        setLastDoc(result.lastDoc);
-        setHasMore(result.hasMore);
-        setTotalCount(result.totalCount);
+
+        const nextLastDoc = currentOffset + data.length;
+        const total = result.meta.total ?? data.length;
+
+        setLastDoc(nextLastDoc);
+        setHasMore(result.meta.total != null ? nextLastDoc < result.meta.total : data.length === pageSize);
+        setTotalCount(total);
     } catch (err) {
         console.error('Error fetching businesses:', err);
         setError(t('directory.errorLoading') || "Failed to load businesses. Please try again.");
