@@ -1,11 +1,32 @@
 import React from 'react';
-import { businesses } from '../constants';
 import { Crown, Star, MapPin, Clock } from './icons';
 import { useTranslations } from '../hooks/useTranslations';
 import { GlassCard } from './GlassCard';
+import { fetchBusinesses } from '../services/businesses';
+import type { Business } from '../types';
 
-export const FeaturedBusinesses: React.FC = () => {
+interface FeaturedBusinessesProps {
+  selectedGovernorate: string;
+  onBusinessOpen: (businessId: string) => void;
+}
+
+export const FeaturedBusinesses: React.FC<FeaturedBusinessesProps> = ({ selectedGovernorate, onBusinessOpen }) => {
   const { t, lang } = useTranslations();
+  const [businesses, setBusinesses] = React.useState<Business[]>([]);
+
+  React.useEffect(() => {
+    const controller = new AbortController();
+
+    fetchBusinesses(selectedGovernorate, { limit: 12, featuredOnly: true, signal: controller.signal })
+      .then((result) => setBusinesses(result.data))
+      .catch(() => setBusinesses([]));
+
+    return () => controller.abort();
+  }, [selectedGovernorate]);
+
+  if (!businesses.length) {
+    return null;
+  }
 
   return (
     <section className="py-16 relative overflow-hidden">
@@ -15,13 +36,13 @@ export const FeaturedBusinesses: React.FC = () => {
           {t('featured.title')}
         </h2>
         <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory">
-          {businesses.filter(b => b.isFeatured || b.isPremium).map((business) => {
-            const displayName = lang === 'ar' && business.nameAr ? business.nameAr : 
-                                lang === 'ku' && business.nameKu ? business.nameKu : 
+          {businesses.map((business) => {
+            const displayName = lang === 'ar' && business.nameAr ? business.nameAr :
+                                lang === 'ku' && business.nameKu ? business.nameKu :
                                 business.name;
             const displayImage = business.coverImage || business.imageUrl || business.image || 'https://picsum.photos/seed/placeholder/600/400';
             const isPremium = business.isPremium || business.isFeatured;
-            
+
             return (
             <GlassCard
               key={business.id}
@@ -55,21 +76,16 @@ export const FeaturedBusinesses: React.FC = () => {
                 <div className="flex items-center gap-4 text-sm text-white/60 mb-4">
                   <div className="flex items-center gap-1">
                     <MapPin className="w-4 h-4" />
-                    {business.distance || '1.2'} km
+                    {business.distance || '—'} km
                   </div>
                   <div className="flex items-center gap-1">
                     <Clock className="w-4 h-4" />
-                    {business.status || 'Open'}
+                    {business.status || '—'}
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <button className="px-4 py-2 rounded-xl bg-gradient-to-r from-primary to-secondary text-white font-medium text-sm hover:shadow-glow-primary transition-all duration-200">
-                    {t('actions.book')}
-                  </button>
-                  <button className="px-4 py-2 rounded-xl backdrop-blur-xl bg-white/10 border border-white/20 text-white font-medium text-sm hover:bg-white/20 transition-all duration-200">
-                    {t('actions.details')}
-                  </button>
-                </div>
+                <button onClick={() => onBusinessOpen(String(business.id))} className="w-full px-4 py-2 rounded-xl bg-gradient-to-r from-primary to-secondary text-white font-medium text-sm hover:shadow-glow-primary transition-all duration-200">
+                  {t('actions.details')}
+                </button>
               </div>
             </GlassCard>
           )})}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Header } from './components/Header';
 import { HeroSection } from './components/HeroSection';
 import { StoriesRing } from './components/StoriesRing';
@@ -16,12 +16,13 @@ import { Dashboard } from './components/Dashboard';
 import { SubcategoryModal } from './components/SubcategoryModal';
 import { GovernorateFilter } from './components/GovernorateFilter';
 import { SearchPortal } from './components/SearchPortal';
-import { mockUser } from './constants';
 import { api } from './services/api';
 import { auth } from './firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import type { User, Category, Subcategory, Post } from './types';
 import { TranslationProvider } from './hooks/useTranslations';
+import { subscribeToNewPosts } from './services/feed';
+import { BusinessDetailsPage } from './components/BusinessDetailsPage';
 
 class ErrorBoundary extends (React.Component as any) {
   constructor(props: any) {
@@ -34,7 +35,7 @@ class ErrorBoundary extends (React.Component as any) {
   }
 
   componentDidCatch(error: any, errorInfo: any) {
-    console.error("Uncaught error:", error, errorInfo);
+    console.error('Uncaught error:', error, errorInfo);
   }
 
   render() {
@@ -43,17 +44,8 @@ class ErrorBoundary extends (React.Component as any) {
         <div className="min-h-screen bg-dark-bg flex items-center justify-center p-4 text-center">
           <div className="max-w-md p-8 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl">
             <h2 className="text-2xl font-bold text-white mb-4">Something went wrong</h2>
-            <p className="text-white/60 mb-6">
-              {this.state.error?.message?.includes('{') 
-                ? "A database error occurred. Please try again later." 
-                : "An unexpected error occurred. Please refresh the page."}
-            </p>
-            <button 
-              onClick={() => window.location.reload()}
-              className="px-6 py-3 rounded-xl bg-primary text-white font-semibold hover:shadow-glow-primary transition-all"
-            >
-              Refresh Page
-            </button>
+            <p className="text-white/60 mb-6">{this.state.error?.message || 'An unexpected error occurred. Please refresh the page.'}</p>
+            <button onClick={() => window.location.reload()} className="px-6 py-3 rounded-xl bg-primary text-white font-semibold hover:shadow-glow-primary transition-all">Refresh Page</button>
           </div>
         </div>
       );
@@ -63,54 +55,33 @@ class ErrorBoundary extends (React.Component as any) {
   }
 }
 
-const mockPosts: Post[] = [
-  {
-    id: '1',
-    businessId: 'b1',
-    businessName: 'Grand Millennium Sulaimani',
-    businessAvatar: 'https://picsum.photos/seed/b1/128/128',
-    caption: 'Experience the best view of Sulaymaniyah from our rooftop restaurant. Book your table now for an unforgettable evening! 🌆✨ #Sulaymaniyah #LuxuryStay',
-    imageUrl: 'https://picsum.photos/seed/post1/800/600',
-    createdAt: new Date('2026-03-24T18:30:00'),
-    likes: 245,
-    verified: true
-  },
-  {
-    id: '2',
-    businessId: 'b2',
-    businessName: 'Saj Al-Reef',
-    businessAvatar: 'https://picsum.photos/seed/b2/128/128',
-    caption: 'Our new family meal deal is here! Enjoy a variety of traditional Iraqi dishes at a special price. Perfect for your weekend gathering. 🥘👨‍👩‍👧‍👦 #IraqiFood #FamilyTime',
-    imageUrl: 'https://picsum.photos/seed/post2/800/600',
-    createdAt: new Date('2026-03-25T10:15:00'),
-    likes: 182,
-    verified: true
-  }
-];
-
 const MainContent: React.FC = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [page, setPage] = useState<'home' | 'dashboard' | 'listing'>('home');
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [currentPage, setCurrentPage] = useState(0);
   const [listingFilter, setListingFilter] = useState<{ categoryId: string } | null>(null);
-  const [selectedGovernorate, setSelectedGovernorate] = useState('all');
-  const [posts, setPosts] = useState<Post[]>(mockPosts);
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [feedError, setFeedError] = useState<string | null>(null);
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [highContrast, setHighContrast] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('iraq-compass-high-contrast') === 'true';
     }
     return false;
   });
+  const [currentPath, setCurrentPath] = useState(() => window.location.pathname || '/');
+
+  const selectedGovernorate = useMemo(() => {
+    const match = currentPath.match(/^\/gov\/([^/]+)$/);
+    return match?.[1] || 'all';
+  }, [currentPath]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        // User is signed in, fetch profile from Firestore
-        // We'll use a default role of 'user' if not found, or prompt for it
         const user = await api.login(firebaseUser.email || '', 'user');
         setCurrentUser(user);
         setIsLoggedIn(true);
@@ -125,13 +96,38 @@ const MainContent: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const fetchPosts = async () => {
-        const apiPosts = await api.getPosts();
-        if (apiPosts && apiPosts.length > 0) {
-            setPosts(apiPosts);
-        }
+    const onPop = () => setCurrentPath(window.location.pathname || '/');
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
+
+  useEffect(() => {
+    const onOnline = () => setIsOffline(false);
+    const onOffline = () => setIsOffline(true);
+    window.addEventListener('online', onOnline);
+    window.addEventListener('offline', onOffline);
+    return () => {
+      window.removeEventListener('online', onOnline);
+      window.removeEventListener('offline', onOffline);
     };
-    fetchPosts();
+  }, []);
+
+  useEffect(() => {
+    api.getPosts()
+      .then((apiPosts) => setPosts(apiPosts))
+      .catch(() => setFeedError('Could not load social feed.'));
+
+    const unsubscribe = subscribeToNewPosts(
+      (newPost) => {
+        setPosts((current) => {
+          if (current.some((post) => post.id === newPost.id)) return current;
+          return [newPost, ...current].sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt)).slice(0, 50);
+        });
+      },
+      (message) => setFeedError(message),
+    );
+
+    return () => unsubscribe();
   }, []);
 
   useEffect(() => {
@@ -144,14 +140,16 @@ const MainContent: React.FC = () => {
     }
   }, [highContrast]);
 
+  const goTo = (path: string) => {
+    window.history.pushState({}, '', path);
+    setCurrentPath(path);
+  };
+
   const handleLogin = async (email: string, role: 'user' | 'owner') => {
-    // Auth is handled in AuthModal via signInWithPopup, 
-    // which triggers onAuthStateChanged above.
-    // We just need to ensure the role is correctly set if it's a new user.
     if (auth.currentUser) {
-        const user = await api.login(email, role);
-        setCurrentUser(user);
-        setIsLoggedIn(true);
+      const user = await api.login(email, role);
+      setCurrentUser(user);
+      setIsLoggedIn(true);
     }
     setShowAuthModal(false);
   };
@@ -160,101 +158,97 @@ const MainContent: React.FC = () => {
     await signOut(auth);
     setIsLoggedIn(false);
     setCurrentUser(null);
-    setPage('home');
+    goTo('/');
   };
-  
-  const navigateTo = (targetPage: 'home' | 'dashboard') => {
-      if (targetPage === 'dashboard' && !isLoggedIn) {
-          setShowAuthModal(true);
-      } else {
-          setPage(targetPage);
-          if (targetPage === 'home') {
-            setListingFilter(null);
-          }
-      }
-  }
+
+  const navigateToDashboard = () => {
+    if (!isLoggedIn) {
+      setShowAuthModal(true);
+      return;
+    }
+    goTo('/dashboard');
+  };
 
   const handleCategoryClick = (category: Category) => {
     if (category.subcategories && category.subcategories.length > 0) {
       setSelectedCategory(category);
     } else {
       setListingFilter({ categoryId: category.id });
-      setPage('listing');
+      goTo('/listing');
     }
   };
-  
+
   const handleSubcategorySelect = (category: Category, subcategory: Subcategory) => {
     setListingFilter({ categoryId: category.id });
-    setPage('listing');
     setSelectedCategory(null);
+    goTo('/listing');
   };
 
   if (!isAuthReady) {
-    return (
-      <div className="min-h-screen bg-dark-bg flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-      </div>
-    );
+    return <div className="min-h-screen bg-dark-bg flex items-center justify-center"><div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" /></div>;
   }
+
+  const businessMatch = currentPath.match(/^\/business\/([^/]+)$/);
 
   return (
     <div className="min-h-screen bg-dark-bg text-white">
-      <Header 
+      <Header
         isLoggedIn={isLoggedIn}
         user={currentUser}
         onSignIn={() => setShowAuthModal(true)}
         onSignOut={handleLogout}
-        onDashboard={() => navigateTo('dashboard')}
-        onHome={() => navigateTo('home')}
+        onDashboard={navigateToDashboard}
+        onHome={() => goTo('/')}
       />
       <main>
-        {page === 'home' && (
+        {isOffline && <div className="mx-4 mt-4 rounded-xl border border-accent/40 bg-accent/10 p-3 text-sm text-accent">You are offline. Realtime updates are paused.</div>}
+        {feedError && <div className="mx-4 mt-4 rounded-xl border border-white/20 bg-white/10 p-3 text-sm text-white/80">{feedError}</div>}
+
+        {(currentPath === '/' || currentPath.startsWith('/gov/')) && (
           <>
             <HeroSection />
             <StoriesRing />
             <div className="container mx-auto px-4 py-12">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-                    <div className="lg:col-span-2">
-                        <h2 className="text-3xl font-bold text-white mb-8">Social Ecosystem</h2>
-                        <SocialFeed posts={posts} />
-                    </div>
-                    <div className="space-y-12">
-                        <SearchPortal />
-                        <GovernorateFilter 
-                          selectedGovernorate={selectedGovernorate}
-                          onGovernorateChange={setSelectedGovernorate}
-                        />
-                         <CategoryGrid 
-                          onCategoryClick={handleCategoryClick} 
-                          currentPage={currentPage}
-                          setCurrentPage={setCurrentPage}
-                        />
-                    </div>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+                <div className="lg:col-span-2">
+                  <h2 className="text-3xl font-bold text-white mb-8">Social Ecosystem</h2>
+                  <SocialFeed posts={posts} />
                 </div>
+                <div className="space-y-12">
+                  <SearchPortal />
+                  <GovernorateFilter
+                    selectedGovernorate={selectedGovernorate}
+                    onGovernorateChange={(gov) => goTo(gov === 'all' ? '/' : `/gov/${gov}`)}
+                  />
+                  <CategoryGrid onCategoryClick={handleCategoryClick} currentPage={currentPage} setCurrentPage={setCurrentPage} />
+                </div>
+              </div>
             </div>
-            <FeaturedBusinesses />
+            <FeaturedBusinesses selectedGovernorate={selectedGovernorate} onBusinessOpen={(businessId) => goTo(`/business/${businessId}`)} />
             <PersonalizedEvents />
             <DealsMarketplace />
             <CommunityStories />
             <CityGuide />
-            <BusinessDirectory />
+            <BusinessDirectory selectedGovernorate={selectedGovernorate} onBusinessOpen={(businessId) => goTo(`/business/${businessId}`)} />
             <InclusiveFeatures highContrast={highContrast} setHighContrast={setHighContrast} />
           </>
         )}
-        {page === 'listing' && listingFilter && (
-            <BusinessDirectory 
-                initialFilter={listingFilter} 
-                onBack={() => navigateTo('home')} 
-            />
+
+        {currentPath === '/listing' && (
+          <BusinessDirectory
+            initialFilter={listingFilter || undefined}
+            selectedGovernorate={selectedGovernorate}
+            onBack={() => goTo('/')}
+            onBusinessOpen={(businessId) => goTo(`/business/${businessId}`)}
+          />
         )}
-        {page === 'dashboard' && <Dashboard user={currentUser!} onLogout={handleLogout} />}
+
+        {businessMatch && <BusinessDetailsPage businessId={businessMatch[1]} onBack={() => history.back()} />}
+
+        {currentPath === '/dashboard' && currentUser && <Dashboard user={currentUser} onLogout={handleLogout} />}
       </main>
       {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} onLogin={handleLogin} />}
-      <SubcategoryModal 
-        category={selectedCategory} 
-        onClose={() => setSelectedCategory(null)}
-        onSubcategorySelect={handleSubcategorySelect}
-      />
+      <SubcategoryModal category={selectedCategory} onClose={() => setSelectedCategory(null)} onSubcategorySelect={handleSubcategorySelect} />
     </div>
   );
 };
@@ -267,6 +261,6 @@ const App: React.FC = () => {
       </TranslationProvider>
     </ErrorBoundary>
   );
-}
+};
 
 export default App;
