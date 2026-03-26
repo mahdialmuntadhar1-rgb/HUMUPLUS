@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { GoogleGenAI } from '@google/genai';
 import { Sparkles, CheckCircle, X, ShieldCheck, Briefcase, MapPin, Navigation } from './icons';
 import { GlassCard } from './GlassCard';
 import { api } from '../services/api';
 import type { BusinessPostcard } from '../types';
+import { aiApi } from '../services/ai';
+import { logger } from '../services/logger';
 
 const GOVERNORATES = [
   'Baghdad', 'Basra', 'Nineveh', 'Erbil', 'Sulaymaniyah', 'Duhok',
@@ -18,6 +19,32 @@ interface PipelineReport {
   total_verified: number;
   total_rejected: number;
   flagged_businesses: { name: string; city: string; reason: string }[];
+}
+
+interface RawReview {
+  text?: string;
+}
+
+interface RawPlace {
+  title?: string;
+  name?: string;
+  phone?: string;
+  phoneNumber?: string;
+  categoryName?: string;
+  category?: string;
+  images?: string[];
+  imageUrls?: string[];
+  reviews?: RawReview[];
+  neighborhood?: string;
+  sublocality?: string;
+  website?: string;
+  instagram?: string;
+  url?: string;
+  googleMapsUrl?: string;
+  totalScore?: number;
+  rating?: number;
+  reviewsCount?: number;
+  reviewCount?: number;
 }
 
 export const DataArchitect: React.FC = () => {
@@ -37,18 +64,20 @@ export const DataArchitect: React.FC = () => {
     addLog(`Starting pipeline for ${selectedGovernorate}...`);
 
     try {
-      const data = JSON.parse(rawJson);
-      const places = Array.isArray(data) ? data : (data.places || []);
+      const data = JSON.parse(rawJson) as unknown;
+      const places: RawPlace[] = Array.isArray(data)
+        ? data as RawPlace[]
+        : (typeof data === 'object' && data && Array.isArray((data as { places?: unknown }).places)
+          ? ((data as { places: RawPlace[] }).places)
+          : []);
       
       let verifiedCount = 0;
       let rejectedCount = 0;
       const flagged: { name: string; city: string; reason: string }[] = [];
       const postcards: BusinessPostcard[] = [];
 
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY as string });
-
       for (const place of places) {
-        const name = place.title || place.name;
+        const name = place.title || place.name || 'Unnamed business';
         const phone = place.phone || place.phoneNumber;
         const category = place.categoryName || place.category;
         const images = place.images || place.imageUrls || [];
@@ -82,21 +111,20 @@ export const DataArchitect: React.FC = () => {
 
         // STEP 4: POSTCARD GENERATION
         addLog(`Generating AI tagline for ${name}...`);
-        const topReviews = reviews.slice(0, 3).map((r: any) => r.text).join('\n');
+        const topReviews = reviews.slice(0, 3).map((r: RawReview) => r.text || '').filter(Boolean);
         
         let tagline = `${name} in ${city}`;
         try {
-            const aiResponse = await ai.models.generateContent({
-                model: 'gemini-3-flash-preview',
-                contents: `You are a creative copywriter for a local business discovery app in Iraq.
-                Based on these Google Maps reviews for "${name}":
-                ${topReviews}
-                Write a single punchy tagline (max 15 words) that captures the vibe of this business.
-                Tone: warm, local, confident. No emojis. No generic phrases like "best in town."`
-            });
-            tagline = aiResponse.text.trim().replace(/^"|"$/g, '');
+            const generatedTagline = await aiApi.generateTagline(name, topReviews);
+            if (generatedTagline) {
+              tagline = generatedTagline.replace(/^"|"$/g, '');
+            }
         } catch (err) {
-            console.error("AI Generation failed", err);
+            logger.warn('AI tagline generation failed, falling back to default tagline', {
+              name,
+              governorate: selectedGovernorate,
+              error: err instanceof Error ? err.message : String(err),
+            });
         }
 
         const postcard: BusinessPostcard = {
@@ -137,7 +165,7 @@ export const DataArchitect: React.FC = () => {
       addLog(`Pipeline complete for ${selectedGovernorate}.`);
 
     } catch (err) {
-      console.error("Pipeline failed", err);
+      logger.error('Pipeline failed', { error: err instanceof Error ? err.message : String(err) });
       addLog(`Critical Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
     } finally {
       setIsProcessing(false);
