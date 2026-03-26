@@ -25,6 +25,11 @@ export const BusinessDetailsModal: React.FC<BusinessDetailsModalProps> = ({ busi
     business.description;
 
   const displayImage = business.coverImage || business.imageUrl || business.image || 'https://picsum.photos/seed/placeholder/800/600';
+  const websiteHref = business.website
+    ? business.website.startsWith('http://') || business.website.startsWith('https://')
+      ? business.website
+      : `https://${business.website}`
+    : null;
 
   return (
     <div className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
@@ -73,10 +78,10 @@ export const BusinessDetailsModal: React.FC<BusinessDetailsModalProps> = ({ busi
                 <a className="hover:text-white" href={`tel:${business.phone}`}>{business.phone}</a>
               </div>
             )}
-            {business.website && (
+            {websiteHref && (
               <div className="flex items-center gap-2 text-white/70 sm:col-span-2">
                 <Globe className="w-4 h-4" />
-                <a className="hover:text-white break-all" href={business.website} target="_blank" rel="noreferrer">{business.website}</a>
+                <a className="hover:text-white break-all" href={websiteHref} target="_blank" rel="noreferrer">{business.website}</a>
               </div>
             )}
           </div>

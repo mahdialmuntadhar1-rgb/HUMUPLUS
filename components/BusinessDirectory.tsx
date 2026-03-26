@@ -18,7 +18,7 @@ const BusinessCard: React.FC<BusinessCardProps> = ({ business, viewMode, onViewD
   
   const displayName = lang === 'ar' && business.nameAr ? business.nameAr : 
                       lang === 'ku' && business.nameKu ? business.nameKu : 
-                      business.name;
+                      business.name || (t('common.notAvailable') || 'N/A');
                       
   const displayImage = business.imageUrl || business.image || business.coverImage || 'https://picsum.photos/seed/placeholder/400/300';
   const displayReviews = business.reviewCount ?? business.reviews ?? 0;
@@ -32,7 +32,7 @@ const BusinessCard: React.FC<BusinessCardProps> = ({ business, viewMode, onViewD
           <h3 className="text-white font-semibold text-lg mb-1">{displayName}</h3>
           <p className="text-white/60 text-sm mb-2">{t(categories.find(c => c.id === business.category)?.nameKey || business.category)}</p>
             <div className="flex items-center gap-4 text-sm">
-            <div className="flex items-center gap-1"><Star className="w-4 h-4 text-accent fill-accent" /><span className="text-white">{business.rating}</span></div>
+            <div className="flex items-center gap-1"><Star className="w-4 h-4 text-accent fill-accent" /><span className="text-white">{business.rating ?? 0}</span></div>
             <div className="flex items-center gap-1 text-white/60"><MapPin className="w-4 h-4" />{business.distance ? `${business.distance} km` : (t('common.notAvailable') || 'N/A')}</div>
           </div>
         </div>
@@ -54,7 +54,7 @@ const BusinessCard: React.FC<BusinessCardProps> = ({ business, viewMode, onViewD
         <h3 className="text-white font-semibold text-lg mb-2">{displayName}</h3>
         <p className="text-white/60 text-sm mb-3">{t(categories.find(c => c.id === business.category)?.nameKey || business.category)}</p>
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1"><Star className="w-4 h-4 text-accent fill-accent" /><span className="text-white font-medium">{business.rating}</span><span className="text-white/60 text-sm">({displayReviews})</span></div>
+          <div className="flex items-center gap-1"><Star className="w-4 h-4 text-accent fill-accent" /><span className="text-white font-medium">{business.rating ?? 0}</span><span className="text-white/60 text-sm">({displayReviews})</span></div>
           <div className="flex items-center gap-1 text-white/60 text-sm"><MapPin className="w-4 h-4" />{business.distance ? `${business.distance} km` : (t('common.notAvailable') || 'N/A')}</div>
         </div>
         <button onClick={() => onViewDetails(business.id)} className="w-full mt-4 py-3 rounded-xl bg-gradient-to-r from-primary to-secondary text-white font-semibold hover:shadow-glow-primary transition-all">{t('directory.viewProfile')}</button>

@@ -9,11 +9,10 @@ interface HeaderProps {
     user: User | null;
     onSignIn: () => void;
     onSignOut: () => void;
-    onDashboard: () => void;
     onHome: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ isLoggedIn, user, onSignIn, onSignOut, onDashboard, onHome }) => {
+export const Header: React.FC<HeaderProps> = ({ isLoggedIn, user, onSignIn, onSignOut, onHome }) => {
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const { t } = useTranslations();
 
@@ -34,7 +33,6 @@ export const Header: React.FC<HeaderProps> = ({ isLoggedIn, user, onSignIn, onSi
                             </button>
                             {dropdownOpen && (
                                 <div className="absolute end-0 mt-2 w-48 backdrop-blur-2xl bg-dark-bg/90 border border-white/20 rounded-xl shadow-soft p-2" onMouseLeave={() => setDropdownOpen(false)}>
-                                    <button onClick={onDashboard} className="w-full text-start px-4 py-2 rounded-lg hover:bg-white/10 transition-colors">{t('header.dashboard')}</button>
                                     <button onClick={onSignOut} className="w-full text-start px-4 py-2 rounded-lg text-accent hover:bg-white/10 transition-colors">{t('header.logout')}</button>
                                 </div>
                             )}

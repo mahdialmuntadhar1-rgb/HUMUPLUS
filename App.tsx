@@ -7,12 +7,10 @@ import { FeaturedBusinesses } from './components/FeaturedBusinesses';
 import { PersonalizedEvents } from './components/PersonalizedEvents';
 import { DealsMarketplace } from './components/DealsMarketplace';
 import { CommunityStories } from './components/CommunityStories';
-import { CityGuide } from './components/CityGuide';
 import { BusinessDirectory } from './components/BusinessDirectory';
 import { InclusiveFeatures } from './components/InclusiveFeatures';
 import { SocialFeed } from './components/SocialFeed';
 import { AuthModal } from './components/AuthModal';
-import { Dashboard } from './components/Dashboard';
 import { SubcategoryModal } from './components/SubcategoryModal';
 import { GovernorateFilter } from './components/GovernorateFilter';
 import { SearchPortal } from './components/SearchPortal';
@@ -66,7 +64,7 @@ const MainContent: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [page, setPage] = useState<'home' | 'dashboard' | 'listing'>('home');
+  const [page, setPage] = useState<'home' | 'listing'>('home');
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [currentPage, setCurrentPage] = useState(0);
   const [listingFilter, setListingFilter] = useState<{ categoryId?: string; city?: string; governorate?: string } | null>(null);
@@ -162,16 +160,10 @@ const MainContent: React.FC = () => {
     setPage('home');
   };
   
-  const navigateTo = (targetPage: 'home' | 'dashboard') => {
-      if (targetPage === 'dashboard' && !isLoggedIn) {
-          setShowAuthModal(true);
-      } else {
-          setPage(targetPage);
-          if (targetPage === 'home') {
-            setListingFilter(null);
-          }
-      }
-  }
+  const navigateHome = () => {
+    setPage('home');
+    setListingFilter(null);
+  };
 
   const handleCategoryClick = (category: Category) => {
     if (category.subcategories && category.subcategories.length > 0) {
@@ -216,8 +208,7 @@ const MainContent: React.FC = () => {
         user={currentUser}
         onSignIn={() => setShowAuthModal(true)}
         onSignOut={handleLogout}
-        onDashboard={() => navigateTo('dashboard')}
-        onHome={() => navigateTo('home')}
+        onHome={navigateHome}
       />
       <main>
         {authError && (
@@ -255,17 +246,15 @@ const MainContent: React.FC = () => {
             <PersonalizedEvents />
             <DealsMarketplace />
             <CommunityStories />
-            <CityGuide />
             <InclusiveFeatures highContrast={highContrast} setHighContrast={setHighContrast} />
           </>
         )}
         {page === 'listing' && listingFilter && (
             <BusinessDirectory 
                 initialFilter={listingFilter} 
-                onBack={() => navigateTo('home')} 
+                onBack={navigateHome} 
             />
         )}
-        {page === 'dashboard' && <Dashboard user={currentUser!} onLogout={handleLogout} />}
       </main>
       {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} onAuthStarted={handleAuthStarted} />}
       <SubcategoryModal 
