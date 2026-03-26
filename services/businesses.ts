@@ -1,6 +1,18 @@
 import type { Business } from '../types';
 import { supabase } from './supabase';
 
+const BUSINESS_COLUMNS = 'id,name,phone,category,governorate,city,address';
+
+const toBusiness = (row: any): Business => ({
+  id: String(row.id),
+  name: row.name,
+  phone: row.phone ?? undefined,
+  category: row.category ?? undefined,
+  governorate: row.governorate ?? undefined,
+  city: row.city ?? undefined,
+  address: row.address ?? undefined,
+});
+
 export async function listBusinesses(params: {
   q?: string;
   governorate?: string;
@@ -13,7 +25,7 @@ export async function listBusinesses(params: {
   const from = (page - 1) * limit;
   const to = from + limit - 1;
 
-  let query = supabase.from('businesses').select('*', { count: 'exact' });
+  let query = supabase.from('businesses').select(BUSINESS_COLUMNS, { count: 'exact' });
 
   if (params.q?.trim()) {
     const escaped = params.q.trim().replace(/,/g, ' ');
@@ -27,20 +39,20 @@ export async function listBusinesses(params: {
   if (error) throw new Error(error.message);
 
   return {
-    data: (data ?? []) as Business[],
+    data: (data ?? []).map(toBusiness),
     meta: { page, limit, total: count ?? null },
   };
 }
 
-export async function getBusinessById(id: string | number) {
+export async function getBusinessById(id: string) {
   const { data, error } = await supabase
     .from('businesses')
-    .select('*')
+    .select(BUSINESS_COLUMNS)
     .eq('id', id)
     .maybeSingle();
 
   if (error) throw new Error(error.message);
   if (!data) return null;
 
-  return data as Business;
+  return toBusiness(data);
 }

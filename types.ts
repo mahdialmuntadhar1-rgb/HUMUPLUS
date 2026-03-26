@@ -33,38 +33,13 @@ export interface Category {
 }
 
 export interface Business {
-  id: string | number;
-  name?: string;
-  nameAr?: string;
-  nameKu?: string;
-  coverImage?: string;
-  imageUrl?: string;
-  isPremium?: boolean;
-  isFeatured?: boolean;
+  id: string;
+  name: string;
+  phone?: string;
   category?: string;
-  subcategory?: string;
-  rating?: number;
-  distance?: number;
-  status?: string;
-  image?: string;
-  verified?: boolean;
-  isVerified?: boolean;
-  reviews?: number;
-  reviewCount?: number;
   governorate?: string;
   city?: string;
   address?: string;
-  phone?: string;
-  whatsapp?: string;
-  website?: string;
-  description?: string;
-  descriptionAr?: string;
-  descriptionKu?: string;
-  openHours?: string;
-  priceRange?: 1 | 2 | 3 | 4;
-  tags?: string[];
-  lat?: number;
-  lng?: number;
 }
 
 export interface Event {

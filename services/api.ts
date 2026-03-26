@@ -47,7 +47,7 @@ export const api = {
       const offset = params.lastDoc || 0;
       let query = supabase
         .from('businesses')
-        .select('*', { count: 'exact' })
+        .select('id,name,phone,category,governorate,city,address', { count: 'exact' })
         .order('name')
         .range(offset, offset + limit - 1);
 
@@ -64,23 +64,20 @@ export const api = {
         query = query.or(`city.ilike.%${q}%,name.ilike.%${q}%`);
       }
 
-      if (params.featuredOnly) {
-        query = query.eq('isFeatured', true);
-      }
-
-      if (params.ratingMin && params.ratingMin > 0) {
-        query = query.gte('rating', params.ratingMin);
-      }
-
       const { data, error, count } = await query;
 
       if (error) {
         throw error;
       }
 
-      let normalized = (data || []).map((business: any) => ({
-        ...business,
-        isVerified: business.isVerified ?? business.verified ?? false,
+      const normalized = (data || []).map((business: any) => ({
+        id: String(business.id),
+        name: business.name,
+        phone: business.phone ?? undefined,
+        category: business.category ?? undefined,
+        governorate: business.governorate ?? undefined,
+        city: business.city ?? undefined,
+        address: business.address ?? undefined,
       })) as Business[];
       const totalCount = count ?? normalized.length;
 

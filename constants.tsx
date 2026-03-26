@@ -1,5 +1,5 @@
 import React from 'react';
-import type { Story, Category, Business, Event, Deal, HeroSlide } from './types';
+import type { Story, Category, Event, Deal, HeroSlide } from './types';
 import {
   Utensils, Coffee, ShoppingBag, Bed, Film, Music, Palette, Dumbbell, Car,
   Hospital, Landmark, Siren, Accessibility, Baby, Users2, Languages, Briefcase,
@@ -244,7 +244,7 @@ export const categories: Category[] = [
 ];
 
 // Businesses
-export const businesses: Business[] = [
+export const businesses = [
   {
     id: '1',
     name: 'Rotana Erbil Hotel',

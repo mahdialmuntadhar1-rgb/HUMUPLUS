@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Business } from '../types';
-import { X, MapPin, Star, Globe } from './icons';
+import { X, MapPin } from './icons';
 import { useTranslations } from '../hooks/useTranslations';
 import { categories } from '../constants';
 
@@ -9,34 +9,18 @@ interface BusinessDetailsModalProps {
   onClose: () => void;
 }
 
+const PLACEHOLDER_IMAGE = 'https://picsum.photos/seed/business-details-placeholder/800/600';
+
 export const BusinessDetailsModal: React.FC<BusinessDetailsModalProps> = ({ business, onClose }) => {
-  const { t, lang } = useTranslations();
+  const { t } = useTranslations();
 
   if (!business) return null;
 
-  const displayName =
-    lang === 'ar' && business.nameAr ? business.nameAr :
-    lang === 'ku' && business.nameKu ? business.nameKu :
-    business.name || t('common.notAvailable') || 'N/A';
-
-  const displayDescription =
-    lang === 'ar' && business.descriptionAr ? business.descriptionAr :
-    lang === 'ku' && business.descriptionKu ? business.descriptionKu :
-    business.description;
-
-  const displayImage = business.coverImage || business.imageUrl || business.image || 'https://picsum.photos/seed/placeholder/800/600';
+  const displayName = business.name || 'N/A';
   const categoryKey = categories.find((c) => c.id === business.category)?.nameKey;
-  const categoryLabel = categoryKey ? t(categoryKey) : (business.category || t('common.notAvailable') || 'N/A');
-  const websiteHref = business.website
-    ? business.website.startsWith('http://') || business.website.startsWith('https://')
-      ? business.website
-      : `https://${business.website}`
-    : null;
-  const socialLinks = [
-    { key: 'instagram', label: 'Instagram', url: (business as any).instagram as string | undefined },
-    { key: 'facebook', label: 'Facebook', url: (business as any).facebook as string | undefined },
-    { key: 'tiktok', label: 'TikTok', url: (business as any).tiktok as string | undefined },
-  ].filter((item) => Boolean(item.url));
+  const categoryLabel = categoryKey ? t(categoryKey) : (business.category || 'N/A');
+  const location = [business.address, business.city, business.governorate].filter(Boolean).join(', ') || 'N/A';
+  const phone = business.phone || 'N/A';
 
   return (
     <div className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
@@ -45,7 +29,7 @@ export const BusinessDetailsModal: React.FC<BusinessDetailsModalProps> = ({ busi
         onClick={(e) => e.stopPropagation()}
       >
         <div className="relative h-64">
-          <img src={displayImage} alt={displayName} className="w-full h-full object-cover" />
+          <img src={PLACEHOLDER_IMAGE} alt={displayName} className="w-full h-full object-cover" />
           <button
             onClick={onClose}
             className="absolute top-3 end-3 w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70"
@@ -59,58 +43,27 @@ export const BusinessDetailsModal: React.FC<BusinessDetailsModalProps> = ({ busi
           <div className="flex items-start justify-between gap-4">
             <div>
               <h3 className="text-2xl font-bold text-white">{displayName}</h3>
-              <p className="text-white/60">
-                {categoryLabel}
-              </p>
-            </div>
-            <div className="flex items-center gap-1 text-white">
-              <Star className="w-4 h-4 text-accent fill-accent" />
-              <span>{business.rating ?? 0}</span>
-              <span className="text-white/60 text-sm">({business.reviewCount ?? business.reviews ?? 0})</span>
+              <p className="text-white/60">{categoryLabel}</p>
             </div>
           </div>
-
-          {displayDescription && <p className="text-white/80 leading-relaxed">{displayDescription}</p>}
 
           <div className="grid sm:grid-cols-2 gap-3 text-sm">
             <div className="flex items-center gap-2 text-white/70">
               <MapPin className="w-4 h-4" />
-              {[business.address, business.city, business.governorate].filter(Boolean).join(', ') || (t('common.notAvailable') || 'N/A')}
+              {location}
             </div>
             <div className="flex items-center gap-2 text-white/70">
               <span className="text-white/50">☎</span>
               {business.phone ? (
-                <a className="hover:text-white" href={`tel:${business.phone}`}>{business.phone}</a>
+                <a className="hover:text-white" href={`tel:${business.phone}`}>{phone}</a>
               ) : (
-                <span>{t('common.notAvailable') || 'N/A'}</span>
+                <span>{phone}</span>
               )}
             </div>
             <div className="flex items-center gap-2 text-white/70 sm:col-span-2">
-              <Globe className="w-4 h-4" />
-              {websiteHref ? (
-                <a className="hover:text-white break-all" href={websiteHref} target="_blank" rel="noreferrer">{business.website}</a>
-              ) : (
-                <span>{t('common.notAvailable') || 'N/A'}</span>
-              )}
+              <span className="text-white/50">📍</span>
+              <span>{business.address || 'N/A'}</span>
             </div>
-            {socialLinks.length > 0 && (
-              <div className="sm:col-span-2 text-white/70">
-                <span className="text-white/50 me-2">{t('common.social') || 'Social'}:</span>
-                <div className="inline-flex flex-wrap gap-3">
-                  {socialLinks.map((item) => (
-                    <a
-                      key={item.key}
-                      href={item.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="hover:text-white underline underline-offset-2"
-                    >
-                      {item.label}
-                    </a>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>
