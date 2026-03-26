@@ -9,7 +9,7 @@ This app uses a frontend-only architecture:
 Frontend (Vite + React)
 → Supabase (Auth, Postgres, Realtime)
 
-No Worker, no proxy API layer, and no Wrangler runtime.
+No Worker runtime exists in this project.
 
 ## Run Locally
 
