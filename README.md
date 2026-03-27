@@ -1,42 +1,36 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Deployment Guide (Cloudflare Pages only)
 
-# Run and deploy your AI Studio app
+This app is deployed as a static Vite build on **Cloudflare Pages**.
 
-This contains everything you need to run your app locally.
-
-View your app in AI Studio: https://ai.studio/apps/accadf3d-012c-4037-9b18-c758fba3ddf9
-
-## Run Locally
-
-**Prerequisites:**  Node.js
-
+## Local setup
 
 1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+   - `npm install`
+2. Set required environment variables in your local environment or `.env.local`:
+   - `VITE_SUPABASE_URL`
+   - `VITE_SUPABASE_ANON_KEY`
+3. Run the development server:
+   - `npm run dev`
 
-## Deploy (Cloudflare Pages only)
-
-This repository is configured for **Cloudflare Pages** deployment only.
+## Build and verify
 
 - Build command: `npm run build`
 - Build output directory: `dist`
+- Full deployment verification (lint + build + stale-string scan): `npm run verify`
 
-### Important
+## Cloudflare Pages configuration
 
-- Do **not** use Cloudflare Workers deployment for this repo.
-- No `wrangler` deploy scripts or Workers config are required.
-- `.wrangler/` artifacts are intentionally ignored and should not be committed.
-## Cloudflare Pages deployment
+Use the following settings in Cloudflare Pages:
 
-Configure Cloudflare Pages with:
-
+- **Framework preset:** Vite
 - **Build command:** `npm run build`
 - **Build output directory:** `dist`
 - **Environment variables:**
   - `VITE_SUPABASE_URL`
   - `VITE_SUPABASE_ANON_KEY`
+
+## Notes
+
+- Deployment is **Cloudflare Pages only**.
+- Do **not** deploy this repository using Cloudflare Workers.
+- `.wrangler/` files are ignored and should not be committed.
