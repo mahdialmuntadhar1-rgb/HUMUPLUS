@@ -130,7 +130,8 @@ export const api = {
   // If your UI uses these sections, we can expand them later. For publish/testing, businesses is the priority.
 
   subscribeToPosts(_callback: (posts: Post[]) => void) {
-    // No realtime/agents. Return a no-op unsubscribe.
+    // MVP containment: provide a static empty feed and avoid hanging loading states.
+    _callback([]);
     return () => {};
   },
 
