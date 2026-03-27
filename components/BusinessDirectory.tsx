@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { QueryDocumentSnapshot, DocumentData } from 'firebase/firestore';
 import { categories, governorates } from '../constants';
-import { api } from '../services/api';
+import { api, type BusinessCursor } from '../services/api';
 import type { Business } from '../types';
 import { Star, Grid3x3, List, MapPin, CheckCircle, ArrowLeft } from './icons';
 import { useTranslations } from '../hooks/useTranslations';
@@ -77,7 +76,7 @@ export const BusinessDirectory: React.FC<BusinessDirectoryProps> = ({ initialFil
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [pageSize] = useState(20);
   const [businessesData, setBusinessesData] = useState<Business[]>([]);
-  const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot<DocumentData> | undefined>(undefined);
+  const [lastDoc, setLastDoc] = useState<BusinessCursor | undefined>(undefined);
   const [hasMore, setHasMore] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
