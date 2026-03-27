@@ -165,7 +165,11 @@ export const BusinessDirectory: React.FC<BusinessDirectoryProps> = ({ initialFil
       setHasMore(result.hasMore);
     } catch (err) {
       console.error("Error fetching businesses:", err);
-      setError(t("directory.errorLoading") || "Failed to load businesses. Please try again.");
+      const message =
+        err instanceof Error && err.message
+          ? err.message
+          : t("directory.errorLoading") || "Failed to load businesses. Please try again.";
+      setError(message);
     } finally {
       setIsLoading(false);
     }

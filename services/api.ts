@@ -8,6 +8,14 @@ import { hasSupabaseEnv, querySupabase } from "./supabase";
 type BusinessDataSource = "live" | "fallback";
 let businessDataSource: BusinessDataSource = hasSupabaseEnv ? "live" : "fallback";
 
+function isSchemaMismatchError(errorMessage: string): boolean {
+  const normalized = errorMessage.toLowerCase();
+  return (
+    normalized.includes("column") &&
+    normalized.includes("does not exist")
+  );
+}
+
 function mapSupabaseBusiness(row: Record<string, any>): Business {
   return {
     id: row.id,
@@ -83,7 +91,7 @@ export const api = {
 
     const { data, error, count } = await querySupabase(path, {
       select:
-        "id,name,name_ar,name_ku,cover_image,image_url,hero_image,category,category_tag,rating,review_count,distance,city,governorate,is_featured,is_premium,is_verified,status,phone,address,website,description",
+        "id,name,name_ar,name_ku,cover_image,image_url,hero_image,category,category_tag,rating,review_count,distance,city,governorate,is_featured,is_premium,status,phone,address,website,description",
       orderBy: "name",
       ascending: true,
       offset,
@@ -93,6 +101,11 @@ export const api = {
 
     if (error) {
       // If Supabase env exists but query fails, DO NOT silently fallback.
+      if (isSchemaMismatchError(error)) {
+        throw new Error(
+          "Directory data is temporarily unavailable due to a database schema mismatch. Please contact support or try again later.",
+        );
+      }
       throw new Error(`Supabase query failed: ${error}`);
     }
 

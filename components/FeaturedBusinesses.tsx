@@ -8,16 +8,23 @@ import { GlassCard } from './GlassCard';
 export const FeaturedBusinesses: React.FC = () => {
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { t, lang } = useTranslations();
 
   useEffect(() => {
     const fetchFeatured = async () => {
       setIsLoading(true);
+      setError(null);
       try {
         const result = await api.getBusinesses({ featuredOnly: true, limit: 10 });
         setBusinesses(result.data);
       } catch (error) {
         console.error('Error fetching featured businesses:', error);
+        setError(
+          error instanceof Error && error.message
+            ? error.message
+            : t('directory.errorLoading') || 'Failed to load businesses. Please try again.',
+        );
       } finally {
         setIsLoading(false);
       }
@@ -40,6 +47,11 @@ export const FeaturedBusinesses: React.FC = () => {
         <h2 className="text-3xl font-bold text-white mb-8 text-center">
           {t('featured.title')}
         </h2>
+        {error && (
+          <div className="mb-6 rounded-xl border border-red-400/40 bg-red-500/10 px-4 py-3 text-sm text-red-100 text-center">
+            {error}
+          </div>
+        )}
         <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory">
           {businesses.length === 0 ? (
             <div className="w-full py-12 flex flex-col items-center justify-center text-center opacity-50">
