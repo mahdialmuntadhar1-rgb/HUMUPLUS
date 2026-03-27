@@ -2,19 +2,37 @@
 <img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
 </div>
 
-# Run and deploy your AI Studio app
+# Run and deploy your app (Firebase Auth + Supabase data)
 
-This contains everything you need to run your app locally.
+This is a Vite + React frontend-only app.
 
-View your app in AI Studio: https://ai.studio/apps/accadf3d-012c-4037-9b18-c758fba3ddf9
+- **Authentication:** Firebase Auth
+- **Data layer:** Supabase (`@supabase/supabase-js`)
+- **No Cloudflare Worker backend/proxy layer**
 
 ## Run Locally
 
-**Prerequisites:**  Node.js
-
+**Prerequisites:** Node.js
 
 1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+   ```bash
+   npm install
+   ```
+2. Copy environment variables:
+   ```bash
+   cp .env.example .env.local
+   ```
+3. Fill in `.env.local`:
+   - `VITE_SUPABASE_URL` (already set to `https://hsadukhmcclwixuntqwu.supabase.co` in example)
+   - `VITE_SUPABASE_ANON_KEY` (from Supabase dashboard)
+   - Firebase Auth `VITE_FIREBASE_*` keys
+4. Run the app:
+   ```bash
+   npm run dev
+   ```
+
+## Deployment notes (Vercel)
+
+- Deploy only the frontend build output (`vite build` => `dist/`).
+- Configure `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in the Vercel project environment variables.
+- Configure Firebase `VITE_FIREBASE_*` variables for authentication.

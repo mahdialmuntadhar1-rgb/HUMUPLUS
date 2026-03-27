@@ -7,16 +7,19 @@ import { useTranslations } from '../hooks/useTranslations';
 export const DealsMarketplace: React.FC = () => {
   const [deals, setDeals] = useState<Deal[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { t } = useTranslations();
 
   useEffect(() => {
     const fetchDeals = async () => {
       setIsLoading(true);
+      setError(null);
       try {
         const data = await api.getDeals();
         setDeals(data);
       } catch (error) {
         console.error('Error fetching deals:', error);
+        setError(t('deals.errorLoading') || 'Failed to load deals.');
       } finally {
         setIsLoading(false);
       }
@@ -28,6 +31,14 @@ export const DealsMarketplace: React.FC = () => {
     return (
       <div className="py-16 flex items-center justify-center">
         <div className="w-8 h-8 border-4 border-accent border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="py-16 flex items-center justify-center text-white/70">
+        {error}
       </div>
     );
   }

@@ -9,17 +9,20 @@ import { motion, AnimatePresence } from 'motion/react';
 export const FeaturedBusinesses: React.FC = () => {
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { t, lang } = useTranslations();
   const scrollRef = React.useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchFeatured = async () => {
       setIsLoading(true);
+      setError(null);
       try {
         const result = await api.getBusinesses({ featuredOnly: true, limit: 10 });
         setBusinesses(result.data);
       } catch (error) {
         console.error('Error fetching featured businesses:', error);
+        setError(t('featured.errorLoading') || 'Failed to load featured businesses.');
       } finally {
         setIsLoading(false);
       }
@@ -40,6 +43,14 @@ export const FeaturedBusinesses: React.FC = () => {
       <div className="py-24 flex flex-col items-center justify-center gap-4">
         <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
         <p className="text-white/40 font-medium animate-pulse">{t('featured.loading') || 'Finding premium spots...'}</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="py-24 flex items-center justify-center text-white/70">
+        {error}
       </div>
     );
   }
@@ -165,4 +176,3 @@ export const FeaturedBusinesses: React.FC = () => {
     </section>
   );
 };
-

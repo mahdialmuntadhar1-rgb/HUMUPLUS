@@ -9,11 +9,13 @@ export const PersonalizedEvents: React.FC = () => {
   const [activeTab, setActiveTab] = useState('forYou');
   const [events, setEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { t } = useTranslations();
 
   useEffect(() => {
     const fetchEvents = async () => {
       setIsLoading(true);
+      setError(null);
       try {
         // Map tabs to categories if needed, or just fetch all for now
         const categoryMap: Record<string, string | undefined> = {
@@ -26,6 +28,7 @@ export const PersonalizedEvents: React.FC = () => {
         setEvents(data);
       } catch (error) {
         console.error('Error fetching events:', error);
+        setError(t('events.errorLoading') || 'Failed to load events.');
       } finally {
         setIsLoading(false);
       }
@@ -54,6 +57,10 @@ export const PersonalizedEvents: React.FC = () => {
         {isLoading ? (
           <div className="py-16 flex items-center justify-center">
             <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : error ? (
+          <div className="py-16 flex items-center justify-center text-white/70">
+            {error}
           </div>
         ) : (
           <div key={activeTab} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in-grid">

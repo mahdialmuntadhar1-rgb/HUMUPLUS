@@ -1,6 +1,7 @@
 import { auth } from '../firebase';
 import type { Business, Post, User, BusinessPostcard } from '../types';
-import { insertRow, selectRows, updateRows, upsertRow } from './supabaseRest';
+import { supabase } from './supabase';
+import type { TableInsert, TableUpdate } from './database.types';
 
 export type BusinessCursor = number;
 
@@ -32,10 +33,7 @@ interface DataAccessErrorInfo {
   }
 }
 
-/**
- * Normalizes and logs Supabase REST access errors while retaining auth context.
- */
-function handleDataAccessError(error: unknown, operationType: OperationType, path: string | null) {
+function handleDataAccessError(error: unknown, operationType: OperationType, path: string | null): never {
   const errInfo: DataAccessErrorInfo = {
     error: error instanceof Error ? error.message : String(error),
     authInfo: {
@@ -58,9 +56,12 @@ function handleDataAccessError(error: unknown, operationType: OperationType, pat
   throw new Error(JSON.stringify(errInfo));
 }
 
-/**
- * Converts timestamp-like values from Supabase into JavaScript Date objects.
- */
+function ensureNoSupabaseError(error: { message: string } | null, operationType: OperationType, path: string) {
+  if (error) {
+    handleDataAccessError(new Error(error.message), operationType, path);
+  }
+}
+
 function toDate(value: unknown, fallback?: Date): Date {
   if (value instanceof Date) return value;
   if (typeof value === 'string' || typeof value === 'number') {
@@ -72,19 +73,13 @@ function toDate(value: unknown, fallback?: Date): Date {
   return fallback ?? new Date();
 }
 
-/**
- * Applies the UI-required verified normalization across records.
- */
-function withNormalizedVerification<T extends { isVerified?: boolean; verified?: boolean }>(row: T): T {
+function withNormalizedVerification<T extends { isVerified?: boolean | null; verified?: boolean | null }>(row: T): T & { isVerified: boolean } {
   return {
     ...row,
     isVerified: row.isVerified ?? row.verified ?? false
   };
 }
 
-/**
- * Maps Supabase business rows into the expected UI business shape.
- */
 function mapBusiness(row: Record<string, unknown>): Business {
   return withNormalizedVerification({
     ...(row as unknown as Business),
@@ -92,9 +87,6 @@ function mapBusiness(row: Record<string, unknown>): Business {
   });
 }
 
-/**
- * Maps Supabase post rows into the expected UI post shape.
- */
 function mapPost(row: Record<string, unknown>): Post {
   const mapped = withNormalizedVerification({
     ...(row as unknown as Post),
@@ -107,9 +99,6 @@ function mapPost(row: Record<string, unknown>): Post {
   };
 }
 
-/**
- * Maps Supabase postcard rows into the expected UI postcard shape.
- */
 function mapPostcard(row: Record<string, unknown>): BusinessPostcard {
   const mapped = withNormalizedVerification({
     ...(row as unknown as BusinessPostcard),
@@ -122,30 +111,27 @@ function mapPostcard(row: Record<string, unknown>): BusinessPostcard {
   };
 }
 
-/**
- * Adds a polling-based fallback subscription for feeds when direct realtime channels are unavailable.
- */
 function createPollingSubscription(callback: (posts: Post[]) => void, intervalMs = 15000) {
   let isCancelled = false;
 
   const run = async () => {
-    try {
-      const { data } = await selectRows<Record<string, unknown>>('posts', {
-        select: '*',
-        order: 'createdAt.desc',
-        limit: 50
-      });
+    const { data, error } = await supabase
+      .from('posts')
+      .select('*')
+      .order('createdAt', { ascending: false })
+      .limit(50);
 
-      if (!isCancelled) {
-        callback(data.map(mapPost));
-      }
-    } catch (error) {
-      handleDataAccessError(error, OperationType.GET, 'posts');
+    ensureNoSupabaseError(error, OperationType.GET, 'posts');
+
+    if (!isCancelled && data) {
+      callback(data.map((item) => mapPost(item as unknown as Record<string, unknown>)));
     }
   };
 
-  run();
-  const timer = window.setInterval(run, intervalMs);
+  run().catch((error) => handleDataAccessError(error, OperationType.GET, 'posts'));
+  const timer = window.setInterval(() => {
+    run().catch((error) => handleDataAccessError(error, OperationType.GET, 'posts'));
+  }, intervalMs);
 
   return () => {
     isCancelled = true;
@@ -154,42 +140,40 @@ function createPollingSubscription(callback: (posts: Post[]) => void, intervalMs
 }
 
 export const api = {
-  /**
-   * Fetches paginated businesses using Supabase with the same UI-facing filters and shape.
-   */
   async getBusinesses(params: { category?: string; city?: string; governorate?: string; lastDoc?: BusinessCursor; limit?: number; featuredOnly?: boolean } = {}) {
     const path = 'businesses';
     try {
       const pageSize = params.limit || 20;
       const offset = params.lastDoc || 0;
       const trimmedCity = params.city?.trim();
-      const queryParams: Record<string, string | number | undefined> = {
-        select: '*',
-        limit: pageSize,
-        offset
-      };
+
+      let query = supabase
+        .from('businesses')
+        .select('*')
+        .range(offset, offset + pageSize - 1);
 
       if (trimmedCity) {
-        queryParams.city = `ilike.${trimmedCity}%`;
-        queryParams.order = 'city.asc,name.asc';
+        query = query.ilike('city', `${trimmedCity}%`).order('city', { ascending: true }).order('name', { ascending: true });
       } else {
-        queryParams.order = 'name.asc';
+        query = query.order('name', { ascending: true });
       }
 
       if (params.category && params.category !== 'all') {
-        queryParams.category = `eq.${params.category}`;
+        query = query.eq('category', params.category);
       }
 
       if (params.governorate && params.governorate !== 'all') {
-        queryParams.governorate = `eq.${params.governorate}`;
+        query = query.eq('governorate', params.governorate);
       }
 
       if (params.featuredOnly) {
-        queryParams.isFeatured = 'eq.true';
+        query = query.eq('isFeatured', true);
       }
 
-      const { data } = await selectRows<Record<string, unknown>>(path, queryParams);
-      const mapped = data.map(mapBusiness);
+      const { data, error } = await query;
+      ensureNoSupabaseError(error, OperationType.GET, path);
+
+      const mapped = (data || []).map((row) => mapBusiness(row as unknown as Record<string, unknown>));
       const nextCursor = offset + mapped.length;
 
       return {
@@ -198,127 +182,126 @@ export const api = {
         hasMore: mapped.length === pageSize
       };
     } catch (error) {
-      handleDataAccessError(error, OperationType.GET, path);
-      return { data: [], hasMore: false as const, lastDoc: undefined };
+      return handleDataAccessError(error, OperationType.GET, path);
     }
   },
 
-  /**
-   * Subscribes to social posts via polling while preserving callback + unsubscribe contract.
-   */
   subscribeToPosts(callback: (posts: Post[]) => void) {
     return createPollingSubscription(callback);
   },
 
-  /**
-   * Fetches the latest deals as a one-time read ordered by createdAt descending.
-   */
   async getDeals() {
     const path = 'deals';
     try {
-      const { data } = await selectRows<Record<string, unknown>>(path, {
-        select: '*',
-        order: 'createdAt.desc',
-        limit: 10
-      });
-      return data.map(row => ({ id: String(row.id), ...row } as any));
+      const { data, error } = await supabase
+        .from('deals')
+        .select('*')
+        .order('createdAt', { ascending: false })
+        .limit(10);
+
+      ensureNoSupabaseError(error, OperationType.GET, path);
+      return (data || []).map(row => ({ id: String(row.id), ...row } as any));
     } catch (error) {
-      handleDataAccessError(error, OperationType.GET, path);
-      return [];
+      return handleDataAccessError(error, OperationType.GET, path);
     }
   },
 
-  /**
-   * Fetches recent stories ordered by createdAt descending with a fixed limit.
-   */
   async getStories() {
     const path = 'stories';
     try {
-      const { data } = await selectRows<Record<string, unknown>>(path, {
-        select: '*',
-        order: 'createdAt.desc',
-        limit: 20
-      });
-      return data.map(row => ({ id: String(row.id), ...row } as any));
+      const { data, error } = await supabase
+        .from('stories')
+        .select('*')
+        .order('createdAt', { ascending: false })
+        .limit(20);
+
+      ensureNoSupabaseError(error, OperationType.GET, path);
+      return (data || []).map(row => ({ id: String(row.id), ...row } as any));
     } catch (error) {
-      handleDataAccessError(error, OperationType.GET, path);
-      return [];
+      return handleDataAccessError(error, OperationType.GET, path);
     }
   },
 
-  /**
-   * Fetches events sorted by date ascending and optionally filtered by category and governorate.
-   */
   async getEvents(params: { category?: string; governorate?: string } = {}) {
     const path = 'events';
     try {
-      const queryParams: Record<string, string | number | undefined> = {
-        select: '*',
-        order: 'date.asc'
-      };
+      let query = supabase
+        .from('events')
+        .select('*')
+        .order('date', { ascending: true });
 
       if (params.category && params.category !== 'all') {
-        queryParams.category = `eq.${params.category}`;
+        query = query.eq('category', params.category);
       }
 
       if (params.governorate && params.governorate !== 'all') {
-        queryParams.governorate = `eq.${params.governorate}`;
+        query = query.eq('governorate', params.governorate);
       }
 
-      const { data } = await selectRows<Record<string, unknown>>(path, queryParams);
-      return data.map(row => ({
+      const { data, error } = await query;
+      ensureNoSupabaseError(error, OperationType.GET, path);
+
+      return (data || []).map(row => ({
         ...row,
         id: String(row.id),
         date: toDate(row.date)
       }) as any);
     } catch (error) {
-      handleDataAccessError(error, OperationType.GET, path);
-      return [];
+      return handleDataAccessError(error, OperationType.GET, path);
     }
   },
 
-  /**
-   * Creates a new post and assigns server-side creation defaults.
-   */
   async createPost(postData: Partial<Post>) {
     const path = 'posts';
     try {
-      const created = await insertRow<Record<string, unknown>>(path, {
+      const payload: TableInsert<'posts'> = {
         ...postData,
         createdAt: new Date().toISOString(),
         likes: 0
-      });
-      return { success: true, id: String(created.id) };
+      };
+
+      const { data, error } = await supabase
+        .from('posts')
+        .insert(payload)
+        .select('id')
+        .single();
+
+      ensureNoSupabaseError(error, OperationType.WRITE, path);
+      return { success: true, id: String(data?.id) };
     } catch (error) {
-      handleDataAccessError(error, OperationType.WRITE, path);
-      return { success: false };
+      return handleDataAccessError(error, OperationType.WRITE, path);
     }
   },
 
-  /**
-   * Reads an existing profile and creates one when missing, including admin-email bootstrapping.
-   */
   async getOrCreateProfile(firebaseUser: any, requestedRole: 'user' | 'owner' = 'user') {
     if (!firebaseUser) return null;
 
     const path = `users/${firebaseUser.uid}`;
     try {
-      const { data: existingUsers } = await selectRows<User>('users', {
-        select: '*',
-        id: `eq.${firebaseUser.uid}`,
-        limit: 1
-      });
+      const { data: existingUser, error: existingUserError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', firebaseUser.uid)
+        .maybeSingle();
 
-      const existingUser = existingUsers[0];
+      ensureNoSupabaseError(existingUserError, OperationType.GET, path);
+
       const adminEmail = 'safaribosafar@gmail.com';
       const isAdminEmail = firebaseUser.email === adminEmail && firebaseUser.emailVerified;
 
       if (existingUser) {
         if (isAdminEmail && existingUser.role !== 'admin') {
-          const [updated] = await updateRows<User>('users', { id: `eq.${firebaseUser.uid}` }, { role: 'admin' });
-          return updated;
+          const { data: updated, error: updateError } = await supabase
+            .from('users')
+            .update({ role: 'admin' })
+            .eq('id', firebaseUser.uid)
+            .select('*')
+            .single();
+
+          ensureNoSupabaseError(updateError, OperationType.UPDATE, path);
+          return updated as User;
         }
-        return existingUser;
+        return existingUser as User;
       }
 
       const newUser: User = {
@@ -326,75 +309,84 @@ export const api = {
         name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
         email: firebaseUser.email || '',
         avatar: firebaseUser.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${firebaseUser.uid}`,
-        role: isAdminEmail ? 'admin' as any : requestedRole,
+        role: isAdminEmail ? 'admin' as const : requestedRole,
         businessId: requestedRole === 'owner' ? `b_${firebaseUser.uid}` : undefined
       };
 
-      await insertRow<User>('users', newUser as unknown as Record<string, unknown>);
+      const payload: TableInsert<'users'> = {
+        ...newUser,
+        businessId: newUser.businessId ?? null
+      };
+
+      const { error: insertError } = await supabase.from('users').insert(payload);
+      ensureNoSupabaseError(insertError, OperationType.CREATE, path);
       return newUser;
     } catch (error) {
-      handleDataAccessError(error, OperationType.WRITE, path);
-      return null;
+      return handleDataAccessError(error, OperationType.WRITE, path);
     }
   },
 
-  /**
-   * Upserts a business postcard record by deterministic id to preserve previous merge behavior.
-   */
   async upsertPostcard(postcard: BusinessPostcard) {
     const path = 'business_postcards';
     try {
       const docId = `${postcard.title}_${postcard.city}`.replace(/\s+/g, '_').toLowerCase();
-      await upsertRow<Record<string, unknown>>(path, {
+
+      const payload: TableInsert<'business_postcards'> = {
         ...postcard,
         id: docId,
         updatedAt: new Date().toISOString()
-      }, 'id');
+      };
 
+      const { error } = await supabase
+        .from('business_postcards')
+        .upsert(payload, { onConflict: 'id' });
+
+      ensureNoSupabaseError(error, OperationType.WRITE, path);
       return { success: true, id: docId };
     } catch (error) {
-      handleDataAccessError(error, OperationType.WRITE, path);
-      return { success: false };
+      return handleDataAccessError(error, OperationType.WRITE, path);
     }
   },
 
-  /**
-   * Fetches postcards sorted by updatedAt and supports governorate filtering.
-   */
   async getPostcards(governorate?: string) {
     const path = 'business_postcards';
     try {
-      const queryParams: Record<string, string | number | undefined> = {
-        select: '*',
-        order: 'updatedAt.desc'
-      };
+      let query = supabase
+        .from('business_postcards')
+        .select('*')
+        .order('updatedAt', { ascending: false });
 
       if (governorate && governorate !== 'all') {
-        queryParams.governorate = `eq.${governorate}`;
+        query = query.eq('governorate', governorate);
       }
 
-      const { data } = await selectRows<Record<string, unknown>>(path, queryParams);
-      return data.map(mapPostcard);
+      const { data, error } = await query;
+      ensureNoSupabaseError(error, OperationType.GET, path);
+
+      return (data || []).map((row) => mapPostcard(row as unknown as Record<string, unknown>));
     } catch (error) {
-      handleDataAccessError(error, OperationType.GET, path);
-      return [];
+      return handleDataAccessError(error, OperationType.GET, path);
     }
   },
 
-  /**
-   * Applies partial profile updates by user id and stamps updatedAt.
-   */
   async updateProfile(userId: string, data: Partial<User>) {
     const path = `users/${userId}`;
     try {
-      await updateRows<User>('users', { id: `eq.${userId}` }, {
+      const payload: TableUpdate<'users'> = {
         ...data,
+        businessId: data.businessId ?? null,
         updatedAt: new Date().toISOString()
-      });
+      };
+
+      const { error } = await supabase
+        .from('users')
+        .update(payload)
+        .eq('id', userId);
+
+      ensureNoSupabaseError(error, OperationType.WRITE, path);
       return { success: true };
     } catch (error) {
-      handleDataAccessError(error, OperationType.WRITE, path);
-      return { success: false };
+      return handleDataAccessError(error, OperationType.WRITE, path);
     }
   }
 };
