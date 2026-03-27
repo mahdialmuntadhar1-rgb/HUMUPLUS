@@ -63,6 +63,7 @@ class ErrorBoundary extends (React.Component as any) {
 }
 
 const MainContent: React.FC = () => {
+  const buildStamp = `${__BUILD_SHA__.slice(0, 8)} @ ${new Date(__BUILD_TIME__).toISOString()}`;
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
@@ -264,6 +265,9 @@ const MainContent: React.FC = () => {
       <div className="fixed bottom-2 right-3 z-50 pointer-events-none">
         <div className="text-[10px] tracking-wide uppercase px-2 py-1 rounded-md bg-black/35 border border-white/20 text-white/60">
           {dataStatus.envOk ? 'ENV OK' : 'ENV MISSING'} · DATA: {dataStatus.dataSource === 'live' ? 'LIVE' : 'FALLBACK'}
+          <div className="normal-case tracking-normal text-white/50">
+            build {buildStamp}
+          </div>
         </div>
       </div>
     </div>
