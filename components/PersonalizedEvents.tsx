@@ -1,73 +1,67 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import type { Event } from '../types';
-import { Sparkles, MapPin, Clock, Users, Calendar } from './icons';
+import { Sparkles, MapPin, Clock, Users, Calendar, X } from './icons';
 import { useTranslations } from '../hooks/useTranslations';
 import { GlassCard } from './GlassCard';
+import { mockData, type GovernorateId } from '../services/mockData';
 
-export const PersonalizedEvents: React.FC = () => {
+interface PersonalizedEventsProps {
+  selectedGovernorate: string;
+}
+
+export const PersonalizedEvents: React.FC<PersonalizedEventsProps> = ({ selectedGovernorate }) => {
   const [activeTab, setActiveTab] = useState('forYou');
   const [events, setEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const { t } = useTranslations();
 
   useEffect(() => {
     const fetchEvents = async () => {
       setIsLoading(true);
       try {
-        // Map tabs to categories if needed, or just fetch all for now
         const categoryMap: Record<string, string | undefined> = {
-          'forYou': undefined,
-          'trending': 'entertainment',
-          'nearYou': 'food',
-          'friendsGoing': 'business'
+          forYou: undefined,
+          trending: 'entertainment',
+          nearYou: 'food',
+          friendsGoing: 'business',
         };
-        const data = await api.getEvents({ category: categoryMap[activeTab] });
-        setEvents(data);
+        const governorate = selectedGovernorate !== 'all' ? selectedGovernorate : undefined;
+        const data = await api.getEvents({ category: categoryMap[activeTab], governorate });
+        const normalizedGov = (selectedGovernorate || 'all') as GovernorateId;
+        setEvents(data.length > 0 ? data : mockData.events(normalizedGov));
       } catch (error) {
         console.error('Error fetching events:', error);
+        setEvents(mockData.events((selectedGovernorate || 'all') as GovernorateId));
       } finally {
         setIsLoading(false);
       }
     };
     fetchEvents();
-  }, [activeTab]);
+  }, [activeTab, selectedGovernorate]);
 
   return (
-    <section className="py-16">
+    <section className="py-16" id="events-section">
       <div className="container mx-auto px-4">
-        <h2 className="text-3xl font-bold text-white mb-8 text-center">
-          {t('events.personalizedTitle')}
-        </h2>
+        <h2 className="text-3xl font-bold text-white mb-8 text-center">{t('events.personalizedTitle')}</h2>
         <div className="flex justify-center gap-3 mb-8 overflow-x-auto scrollbar-hide">
           {['forYou', 'trending', 'nearYou', 'friendsGoing'].map((tab) => (
-            <button
-              key={tab}
-              className={`flex-shrink-0 px-6 py-3 rounded-full backdrop-blur-xl border transition-all duration-200 ${activeTab === tab ? 'bg-primary border-primary text-white shadow-glow-primary' : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10'}`}
-              onClick={() => setActiveTab(tab)}
-            >
+            <button key={tab} className={`flex-shrink-0 px-6 py-3 rounded-full backdrop-blur-xl border transition-all duration-200 ${activeTab === tab ? 'bg-primary border-primary text-white shadow-glow-primary' : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10'}`} onClick={() => setActiveTab(tab)}>
               {t(`events.tabs.${tab}`)}
             </button>
           ))}
         </div>
 
         {isLoading ? (
-          <div className="py-16 flex items-center justify-center">
-            <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-          </div>
+          <div className="py-16 flex items-center justify-center"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>
         ) : (
           <div key={activeTab} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in-grid">
-            <style>{`
-                @keyframes fade-in-grid {
-                    from { opacity: 0; transform: translateY(1rem); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-                .animate-fade-in-grid { animation: fade-in-grid 0.5s ease-in-out forwards; }
-            `}</style>
+            <style>{`@keyframes fade-in-grid {from { opacity: 0; transform: translateY(1rem); } to { opacity: 1; transform: translateY(0); }} .animate-fade-in-grid { animation: fade-in-grid 0.5s ease-in-out forwards; }`}</style>
             {events.length === 0 ? (
               <div className="col-span-full py-12 flex flex-col items-center justify-center text-center opacity-50">
                 <Calendar className="w-12 h-12 text-white/20 mb-4" />
-                <p className="text-white/60 text-sm">{t('events.noEvents') || "No events found for this category."}</p>
+                <p className="text-white/60 text-sm">{t('events.noEvents') || 'No events found for this category.'}</p>
               </div>
             ) : (
               events.map((event) => (
@@ -80,10 +74,7 @@ export const PersonalizedEvents: React.FC = () => {
                         <span className="text-white text-xs font-medium">{t('events.aiPick')}</span>
                       </div>
                     )}
-                    <div className="absolute top-3 end-3 backdrop-blur-xl bg-white/20 rounded-xl p-2 text-center min-w-[60px]">
-                      <div className="text-white font-bold text-lg">{event.date.getDate()}</div>
-                      <div className="text-white/80 text-xs uppercase">{event.date.toLocaleString('default', { month: 'short' })}</div>
-                    </div>
+                    <div className="absolute top-3 end-3 backdrop-blur-xl bg-white/20 rounded-xl p-2 text-center min-w-[60px]"><div className="text-white font-bold text-lg">{event.date.getDate()}</div><div className="text-white/80 text-xs uppercase">{event.date.toLocaleString('default', { month: 'short' })}</div></div>
                   </div>
                   <div className="p-5">
                     <h3 className="text-white font-semibold text-lg mb-2 line-clamp-2">{event.titleKey ? t(event.titleKey) : event.title}</h3>
@@ -94,7 +85,7 @@ export const PersonalizedEvents: React.FC = () => {
                     </div>
                     <div className="flex items-center justify-between">
                       <div><span className="text-secondary font-bold text-xl">{event.price === 0 ? t('events.free') : `${event.price.toLocaleString()} IQD`}</span></div>
-                      <button className="px-4 py-2 rounded-xl bg-gradient-to-r from-primary to-secondary text-white font-medium text-sm hover:shadow-glow-primary transition-all duration-200">{t('events.viewDetails')}</button>
+                      <button onClick={() => setSelectedEvent(event)} className="px-4 py-2 rounded-xl bg-gradient-to-r from-primary to-secondary text-white font-medium text-sm hover:shadow-glow-primary transition-all duration-200">{t('events.viewDetails')}</button>
                     </div>
                   </div>
                 </GlassCard>
@@ -103,6 +94,14 @@ export const PersonalizedEvents: React.FC = () => {
           </div>
         )}
       </div>
+      {selectedEvent && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setSelectedEvent(null)}>
+          <div className="w-full max-w-md bg-dark-bg border border-white/20 rounded-2xl p-6" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between mb-3"><h3 className="text-xl text-white font-bold">{selectedEvent.title}</h3><button onClick={() => setSelectedEvent(null)}><X className="w-5 h-5 text-white/60" /></button></div>
+            <p className="text-white/70">{selectedEvent.venue} · {selectedEvent.governorate}</p>
+          </div>
+        </div>
+      )}
     </section>
   );
 };

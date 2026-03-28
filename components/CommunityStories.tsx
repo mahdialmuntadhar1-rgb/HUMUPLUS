@@ -4,8 +4,13 @@ import type { Story } from '../types';
 import { Briefcase, Users, ShieldCheck, Plus } from './icons';
 import { StoryViewer } from './StoryViewer';
 import { useTranslations } from '../hooks/useTranslations';
+import { mockData, type GovernorateId } from '../services/mockData';
 
-export const CommunityStories: React.FC = () => {
+interface CommunityStoriesProps {
+  selectedGovernorate: string;
+}
+
+export const CommunityStories: React.FC<CommunityStoriesProps> = ({ selectedGovernorate }) => {
   const [stories, setStories] = useState<Story[]>([]);
   const [activeStory, setActiveStory] = useState<Story | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -16,15 +21,21 @@ export const CommunityStories: React.FC = () => {
       setIsLoading(true);
       try {
         const data = await api.getStories();
-        setStories(data);
+        const normalizedGov = (selectedGovernorate || 'all') as GovernorateId;
+        const supabaseStories = normalizedGov === 'all'
+          ? data
+          : data.filter((item: any) => (item.governorate || '').toLowerCase() === normalizedGov);
+
+        setStories(supabaseStories.length > 0 ? supabaseStories : mockData.stories(normalizedGov));
       } catch (error) {
         console.error('Error fetching stories:', error);
+        setStories(mockData.stories((selectedGovernorate || 'all') as GovernorateId));
       } finally {
         setIsLoading(false);
       }
     };
     fetchStories();
-  }, []);
+  }, [selectedGovernorate]);
 
   if (isLoading) {
     return (
@@ -35,7 +46,7 @@ export const CommunityStories: React.FC = () => {
   }
 
   return (
-    <section className="py-16">
+    <section className="py-16" id="community-stories-section">
       <div className="container mx-auto px-4">
         <h2 className="text-3xl font-bold text-white mb-8 text-center">
           {t('stories.communityTitle')}
@@ -78,11 +89,11 @@ export const CommunityStories: React.FC = () => {
               </div>
             </div>
           )))}
-          <div className="aspect-[9/16] rounded-2xl backdrop-blur-xl bg-white/5 border-2 border-dashed border-white/20 flex flex-col items-center justify-center gap-3 hover:bg-white/10 hover:border-primary/50 transition-all cursor-pointer">
+          <div className="aspect-[9/16] rounded-2xl backdrop-blur-xl bg-white/5 border-2 border-dashed border-white/20 flex flex-col items-center justify-center gap-3 cursor-not-allowed opacity-70">
             <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
               <Plus className="w-6 h-6 text-white" />
             </div>
-            <span className="text-white/80 text-sm font-medium">{t('stories.addYours')}</span>
+            <span className="text-white/80 text-sm font-medium">{t('stories.addSoon')}</span>
           </div>
         </div>
       </div>

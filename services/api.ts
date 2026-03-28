@@ -34,6 +34,32 @@ const toDate = (value: any): Date => {
   return Number.isNaN(date.getTime()) ? new Date() : date;
 };
 
+
+const governorateValueMap: Record<string, string> = {
+  baghdad: 'Baghdad',
+  basra: 'Basra',
+  erbil: 'Erbil',
+  sulaymaniyah: 'Sulaymaniyah',
+  dohuk: 'Dohuk',
+  nineveh: 'Nineveh',
+  anbar: 'Al Anbar',
+  babil: 'Babil',
+  karbala: 'Karbala',
+  najaf: 'Najaf',
+  qadisiyyah: 'Al-Qādisiyyah',
+  wasit: 'Wasit',
+  maysan: 'Maysan',
+  dhi_qar: 'Dhi Qar',
+  muthanna: 'Al Muthanna',
+  diyala: 'Diyala',
+  kirkuk: 'Kirkuk',
+  salah_al_din: 'Salah al-Din',
+};
+
+const resolveGovernorateFilter = (value?: string) => {
+  if (!value || value === 'all') return undefined;
+  return governorateValueMap[value.toLowerCase()] || value;
+};
 export const api = {
   async getBusinesses(params: {
     category?: string;
@@ -60,8 +86,9 @@ export const api = {
         query = query.eq('category', params.category);
       }
 
-      if (params.governorate && params.governorate !== 'all') {
-        query = query.eq('governorate', params.governorate);
+      const governorateFilter = resolveGovernorateFilter(params.governorate);
+      if (governorateFilter) {
+        query = query.eq('governorate', governorateFilter);
       }
 
       if (params.featuredOnly) {
@@ -181,8 +208,9 @@ export const api = {
         query = query.eq('category', params.category);
       }
 
-      if (params.governorate && params.governorate !== 'all') {
-        query = query.eq('governorate', params.governorate);
+      const governorateFilter = resolveGovernorateFilter(params.governorate);
+      if (governorateFilter) {
+        query = query.eq('governorate', governorateFilter);
       }
 
       const { data, error } = await query;
@@ -198,10 +226,14 @@ export const api = {
     }
   },
 
-  async createPost(postData: Partial<Post>) {
+  async createPost(postData: Partial<Post>, authorRole?: User['role']) {
     const path = 'posts';
 
     try {
+      if (authorRole && !['owner', 'admin'].includes(authorRole)) {
+        throw new Error('Only business owners can create posts.');
+      }
+
       const { data, error } = await supabase
         .from(path)
         .insert({
@@ -312,8 +344,9 @@ export const api = {
     try {
       let query = supabase.from(path).select('*').order('updatedAt', { ascending: false });
 
-      if (governorate && governorate !== 'all') {
-        query = query.eq('governorate', governorate);
+      const governorateFilter = resolveGovernorateFilter(governorate);
+      if (governorateFilter) {
+        query = query.eq('governorate', governorateFilter);
       }
 
       const { data, error } = await query;

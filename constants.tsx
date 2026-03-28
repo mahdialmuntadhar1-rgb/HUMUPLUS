@@ -957,6 +957,7 @@ export const translations = {
         sendMessage: "Send message...",
         noStories: "No stories shared yet.",
         latestStatus: "LATEST STATUS",
+        addSoon: "Add story (coming soon)",
     },
     filter: {
         governorate: "Filter by Governorate"
@@ -1156,7 +1157,11 @@ export const translations = {
     },
     actions: {
         book: "Book Now",
-        details: "View Details"
+        details: "View Details",
+        exploreMyCity: "Explore my city",
+        viewBusinesses: "View businesses",
+        seeTrending: "See what's trending",
+        joinOwner: "Join as business owner"
     },
     events: {
         personalizedTitle: "Events, Personalized For You",
@@ -1191,6 +1196,10 @@ export const translations = {
             fitness: { title: "Off Your First Month", description: "Join Fitness World Gym and get half price.", expires: "1 Week" },
             techcity: { title: "Off All Electronics", description: "TechCity summer sale is here. Don't miss out!", expires: "5 Days" }
         }
+    },
+    postcards: {
+        title: "Business Postcards",
+        openMap: "Open in maps",
     },
     cityGuide: {
         title: "AI-Powered City Guide",
@@ -1304,6 +1313,10 @@ export const translations = {
         orEmail: "Or continue with email",
         noAccount: "Don't have an account? Sign up",
         haveAccount: "Already have an account? Sign in",
+        emailComingSoon: "Email sign-in coming soon",
+        emailComingSoonDesc: "Google sign-in is active now. Email auth is being finalized.",
+        ownerOnlyTitle: "Business owner only",
+        ownerOnlyDesc: "Posting is available for business owner accounts. Switch role at sign-up to test posting.",
     },
     social: {
         ecosystemTitle: "Social Ecosystem",
@@ -1316,6 +1329,7 @@ export const translations = {
         postPlaceholder: "What's new with your business?",
         addPhoto: "Add Photo",
         post: "Post",
+        ownerOnlyNotice: "You can browse and engage as a visitor. Posting is reserved for business owners.",
     },
     dashboard: {
         welcome: "Welcome",
@@ -1375,6 +1389,7 @@ export const translations = {
         sendMessage: "أرسل رسالة...",
         noStories: "لا توجد قصص منشورة بعد.",
         latestStatus: "آخر حالة",
+        addSoon: "إضافة القصة قريباً",
     },
     filter: {
         governorate: "التصفية حسب المحافظة"
@@ -1574,7 +1589,11 @@ export const translations = {
     },
     actions: {
         book: "احجز الآن",
-        details: "عرض التفاصيل"
+        details: "عرض التفاصيل",
+        exploreMyCity: "استكشف مدينتي",
+        viewBusinesses: "عرض الأنشطة التجارية",
+        seeTrending: "شاهد الرائج",
+        joinOwner: "انضم كصاحب عمل"
     },
     events: {
         personalizedTitle: "فعاليات مخصصة لك",
@@ -1609,6 +1628,10 @@ export const translations = {
             fitness: { title: "خصم على شهرك الأول", description: "انضم إلى فيتنس وورلد جيم واحصل على نصف السعر.", expires: "أسبوع واحد" },
             techcity: { title: "خصم على جميع الإلكترونيات", description: "تخفيضات الصيف في تيك سيتي هنا. لا تفوت الفرصة!", expires: "5 أيام" }
         }
+    },
+    postcards: {
+        title: "بطاقات الأعمال",
+        openMap: "افتح في الخرائط",
     },
     cityGuide: {
         title: "دليل المدينة المدعوم بالذكاء الاصطناعي",
@@ -1722,6 +1745,10 @@ export const translations = {
         orEmail: "أو المتابعة عبر البريد الإلكتروني",
         noAccount: "ليس لديك حساب؟ سجل الآن",
         haveAccount: "لديك حساب بالفعل؟ سجل دخولك",
+        emailComingSoon: "تسجيل البريد الإلكتروني قريباً",
+        emailComingSoonDesc: "تسجيل Google متاح الآن، وميزة البريد الإلكتروني قيد الإطلاق.",
+        ownerOnlyTitle: "متاح لأصحاب الأعمال فقط",
+        ownerOnlyDesc: "النشر مخصص لحسابات أصحاب الأعمال. اختر دور صاحب عمل عند التسجيل للتجربة.",
     },
     social: {
         ecosystemTitle: "النظام البيئي الاجتماعي",
@@ -1734,6 +1761,7 @@ export const translations = {
         postPlaceholder: "ما الجديد في عملك؟",
         addPhoto: "إضافة صورة",
         post: "نشر",
+        ownerOnlyNotice: "يمكنك التصفح والتفاعل كزائر. النشر مخصص لأصحاب الأعمال.",
     },
     dashboard: {
         welcome: "أهلاً بك",
@@ -1794,6 +1822,7 @@ export const translations = {
         sendMessage: "نامە بنێرە...",
         noStories: "هێشتا هیچ چیرۆکێک هاوبەش نەکراوە.",
         latestStatus: "دوایین بارودۆخ",
+        addSoon: "زیادکردنی چیرۆک بەزوویی",
     },
     filter: {
         governorate: "فلتەرکردن بەپێی پارێزگا"
@@ -1993,7 +2022,11 @@ export const translations = {
     },
     actions: {
         book: "ئێستا حیجز بکە",
-        details: "پیشاندانی وردەکاری"
+        details: "پیشاندانی وردەکاری",
+        exploreMyCity: "شارەکەم بگەڕێ",
+        viewBusinesses: "بزنسەکان ببینە",
+        seeTrending: "ترێندەکان ببینە",
+        joinOwner: "وەک خاوەن بزنس بەشداربە"
     },
     events: {
         personalizedTitle: "بۆنەکان، تایبەت بۆ تۆ",
@@ -2028,6 +2061,10 @@ export const translations = {
             fitness: { title: "داشکاندن لەسەر مانگی یەکەمت", description: "ببە بە ئەندام لە فیتنس وۆرڵد جیم و نیوەی نرخەکە وەربگرە.", expires: "١ هەفتە" },
             techcity: { title: "داشکاندن لەسەر هەموو ئەلیکترۆنیاتەکان", description: "داشکاندنی هاوینەی تێک سیتی لێرەیە. لەدەستی مەدە!", expires: "٥ ڕۆژ" }
         }
+    },
+    postcards: {
+        title: "پۆستکارتی بزنس",
+        openMap: "لە نەخشەدا بکەرەوە",
     },
     cityGuide: {
         title: "ڕێبەری شار بە زیرەکی دەستکرد",
@@ -2141,6 +2178,10 @@ export const translations = {
         orEmail: "یان بەردەوام بە بە ئیمەیڵ",
         noAccount: "هەژمارت نییە؟ ناوت تۆمار بکە",
         haveAccount: "پێشتر هەژمارت دروستکردووە؟ بچۆ ژوورەوە",
+        emailComingSoon: "چوونەژوورەوەی ئیمەیڵ بەزوویی",
+        emailComingSoonDesc: "چوونەژوورەوەی Google ئێستا چالاکە، ئیمەیڵ لە ڕێگای تەواوبوونە.",
+        ownerOnlyTitle: "تەنها بۆ خاوەن بزنس",
+        ownerOnlyDesc: "پۆستکردن تەنها بۆ هەژماری خاوەن بزنسە. لە تۆمارکردندا ڕۆڵی خاوەن بزنس هەڵبژێرە.",
     },
     social: {
         ecosystemTitle: "کۆمەڵگەی بازرگانی کۆمەڵایەتی",
@@ -2153,6 +2194,7 @@ export const translations = {
         postPlaceholder: "چی نوێ هەیە لە کارتدا؟",
         addPhoto: "وێنە زیاد بکە",
         post: "بڵاوکردنەوە",
+        ownerOnlyNotice: "دەتوانیت وەک سەردانکەر بگەڕێیت. پۆستکردن تەنها بۆ خاوەن بزنسە.",
     },
     dashboard: {
         welcome: "بەخێربێیت",

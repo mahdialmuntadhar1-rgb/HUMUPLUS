@@ -10,9 +10,10 @@ import { api } from '../services/api';
 interface DashboardProps {
     user: User;
     onLogout: () => void;
+    onRequestOwnerAccess: () => void;
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onRequestOwnerAccess }) => {
     const { t, lang } = useTranslations();
     const [activeTab, setActiveTab] = React.useState<'profile' | 'architect'>('profile');
     const [statusMsg, setStatusMsg] = React.useState<{ type: 'success' | 'error', text: string } | null>(null);
@@ -24,7 +25,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                 businessId: user.businessId,
                 businessName: user.name,
                 businessAvatar: user.avatar
-            });
+            }, user.role);
             if (result.success) {
                 setStatusMsg({ type: 'success', text: t('dashboard.postSuccess') || 'Post created successfully!' });
                 setTimeout(() => setStatusMsg(null), 3000);
@@ -120,6 +121,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                 <DataArchitect />
             ) : (
                 <>
+
+                    {user.role !== 'owner' && user.role !== 'admin' && (
+                        <div className="max-w-2xl mx-auto mb-12 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-6 text-center">
+                            <h2 className="text-xl font-bold text-amber-100 mb-2">{t('auth.ownerOnlyTitle')}</h2>
+                            <p className="text-amber-100/80 mb-4">{t('auth.ownerOnlyDesc')}</p>
+                            <button onClick={onRequestOwnerAccess} className="px-6 py-2.5 rounded-xl bg-amber-400/20 hover:bg-amber-400/30 text-amber-100 font-semibold">
+                                {t('actions.joinOwner')}
+                            </button>
+                        </div>
+                    )}
                     {user.role === 'owner' && user.businessId && (
                         <div className="max-w-2xl mx-auto mb-12">
                             <h2 className="text-2xl font-bold text-white mb-6">{t('dashboard.createPost') || "Create a Post"}</h2>

@@ -22,7 +22,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onLogin }) => {
             const { error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                    redirectTo: window.location.href,
+                    redirectTo: `${window.location.origin}${window.location.pathname}`,
+                    skipBrowserRedirect: false,
                 },
             });
 
@@ -99,12 +100,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onLogin }) => {
                         </div>
                     </div>
 
-                    <div className="space-y-4 opacity-50 pointer-events-none">
+                    <div className="space-y-4 opacity-50">
                         <input type="email" placeholder={t('auth.email')} className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white outline-none" />
                         <input type="password" placeholder={t('auth.password')} className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white outline-none" />
-                        <button className="w-full py-3 rounded-xl bg-white/10 text-white/40 font-semibold">
-                            {activeTab === 'signin' ? t('auth.signIn') : t('auth.createAccount')}
+                        <button type="button" disabled className="w-full py-3 rounded-xl bg-white/10 text-white/40 font-semibold cursor-not-allowed">
+                            {t('auth.emailComingSoon')}
                         </button>
+                        <p className="text-xs text-white/40 text-center">{t('auth.emailComingSoonDesc')}</p>
                     </div>
 
                     <div className="text-center">

@@ -3,7 +3,7 @@ import { Heart, MessageCircle, Share2, MoreHorizontal, CheckCircle } from './ico
 import { GlassCard } from './GlassCard';
 import { useTranslations } from '../hooks/useTranslations';
 import { motion, AnimatePresence } from 'motion/react';
-import type { Post } from '../types';
+import type { Post, User } from '../types';
 
 interface SocialFeedProps {
     posts: Post[];
@@ -12,11 +12,15 @@ interface SocialFeedProps {
     onLike?: (postId: string) => void;
     onComment?: (postId: string) => void;
     onShare?: (postId: string) => void;
+    currentUser?: User | null;
+    onRequestOwnerAccess?: () => void;
 }
 
-export const SocialFeed: React.FC<SocialFeedProps> = ({ posts, isLoading, isLoggedIn, onLike, onComment, onShare }) => {
+export const SocialFeed: React.FC<SocialFeedProps> = ({ posts, isLoading, isLoggedIn, onLike, onComment, onShare, currentUser, onRequestOwnerAccess }) => {
     const { t, lang } = useTranslations();
     const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
+
+    const canPost = currentUser?.role === 'owner' || currentUser?.role === 'admin';
 
     const handleLike = (postId: string) => {
         const newLikedPosts = new Set(likedPosts);
@@ -52,6 +56,15 @@ export const SocialFeed: React.FC<SocialFeedProps> = ({ posts, isLoading, isLogg
 
     return (
         <div className="space-y-6 max-w-2xl mx-auto">
+            {isLoggedIn && !canPost && (
+                <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-amber-100">
+                    <p className="text-sm mb-3">{t('social.ownerOnlyNotice')}</p>
+                    <button onClick={onRequestOwnerAccess} className="px-4 py-2 rounded-lg bg-amber-400/20 hover:bg-amber-400/30 transition-colors text-sm font-semibold">
+                        {t('actions.joinOwner')}
+                    </button>
+                </div>
+            )}
+
             <AnimatePresence mode="popLayout">
                 {posts.length === 0 ? (
                     <motion.div 

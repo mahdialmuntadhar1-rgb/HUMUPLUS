@@ -13,6 +13,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import type { User as SupabaseAuthUser } from '@supabase/supabase-js';
 
 import { translations } from './constants';
+import { mockData, type GovernorateId } from './services/mockData';
 
 const getTranslation = (key: string) => {
   const lang = (localStorage.getItem('iraq-compass-lang') as 'en' | 'ar' | 'ku') || 'en';
@@ -81,9 +82,9 @@ const MainContent: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [listingFilter, setListingFilter] = useState<{ categoryId?: string; city?: string; governorate?: string } | null>(null);
   const [selectedGovernorate, setSelectedGovernorate] = useState('all');
-  const [searchQuery, setSearchQuery] = useState('');
   const [posts, setPosts] = useState<Post[]>([]);
   const [isSocialLoading, setIsSocialLoading] = useState(true);
+  const [showOwnerMessage, setShowOwnerMessage] = useState(false);
   const [highContrast, setHighContrast] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('iraq-compass-high-contrast') === 'true';
@@ -193,7 +194,6 @@ const MainContent: React.FC = () => {
   };
 
   const handleSearch = (query: string) => {
-    setSearchQuery(query);
     setListingFilter({ city: query, governorate: selectedGovernorate !== 'all' ? selectedGovernorate : undefined });
     setPage('listing');
   };
@@ -205,6 +205,30 @@ const MainContent: React.FC = () => {
     }
   };
 
+
+  const visiblePosts = React.useMemo(() => {
+    const normalizedGov = (selectedGovernorate || 'all') as GovernorateId;
+    const normalizedPosts = normalizedGov === 'all'
+      ? posts
+      : posts.filter((post) => (post.governorate || '').toLowerCase() === normalizedGov);
+
+    if (normalizedPosts.length > 0) return normalizedPosts;
+    return mockData.posts(normalizedGov);
+  }, [posts, selectedGovernorate]);
+
+  const handleJoinOwner = () => {
+    if (!isLoggedIn) {
+      setShowAuthModal(true);
+      return;
+    }
+
+    if (currentUser?.role === 'owner' || currentUser?.role === 'admin') {
+      setPage('dashboard');
+      return;
+    }
+
+    setShowOwnerMessage(true);
+  };
   if (!isAuthReady) {
     return (
       <div className="min-h-screen bg-dark-bg flex items-center justify-center">
@@ -234,9 +258,10 @@ const MainContent: React.FC = () => {
               transition={{ duration: 0.3 }}
             >
               <HomePage 
-                posts={posts}
+                posts={visiblePosts}
                 isSocialLoading={isSocialLoading}
                 isLoggedIn={isLoggedIn}
+                currentUser={currentUser}
                 onCategoryClick={handleCategoryClick}
                 currentPage={currentPage}
                 setCurrentPage={setCurrentPage}
@@ -245,6 +270,7 @@ const MainContent: React.FC = () => {
                 onGovernorateChange={handleGovernorateChange}
                 highContrast={highContrast}
                 setHighContrast={setHighContrast}
+                onJoinOwner={handleJoinOwner}
               />
             </motion.div>
           )}
@@ -270,12 +296,23 @@ const MainContent: React.FC = () => {
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.3 }}
             >
-              <Dashboard user={currentUser!} onLogout={handleLogout} />
+              <Dashboard user={currentUser!} onLogout={handleLogout} onRequestOwnerAccess={handleJoinOwner} />
             </motion.div>
           )}
         </AnimatePresence>
       </main>
       {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} onLogin={handleLogin} />}
+      {showOwnerMessage && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setShowOwnerMessage(false)}>
+          <div className="w-full max-w-md rounded-2xl bg-dark-bg border border-white/20 p-6" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-xl font-bold text-white mb-2">{t('auth.ownerOnlyTitle')}</h3>
+            <p className="text-white/70 mb-6">{t('auth.ownerOnlyDesc')}</p>
+            <button onClick={() => { setShowOwnerMessage(false); setShowAuthModal(true); }} className="w-full py-3 rounded-xl bg-gradient-to-r from-primary to-secondary text-white font-semibold">
+              {t('actions.joinOwner')}
+            </button>
+          </div>
+        </div>
+      )}
       <SubcategoryModal 
         category={selectedCategory} 
         onClose={() => setSelectedCategory(null)}
