@@ -17,7 +17,7 @@ export const TranslationProvider: React.FC<{ children: React.ReactNode }> = ({ c
     const [lang, setLangState] = useState<Language>('en');
 
     useEffect(() => {
-        const savedLang = localStorage.getItem('iraq-compass-lang') as Language;
+        const savedLang = localStorage.getItem('humus-lang') as Language;
         if (savedLang && ['en', 'ar', 'ku'].includes(savedLang)) {
             setLangState(savedLang);
         }
@@ -32,7 +32,7 @@ export const TranslationProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
     const setLang = (newLang: Language) => {
         setLangState(newLang);
-        localStorage.setItem('iraq-compass-lang', newLang);
+        localStorage.setItem('humus-lang', newLang);
     };
 
     const t = useCallback((key: string): string => {

@@ -666,7 +666,7 @@ export const translations = {
         password: "Password",
         language: "Preferred Language",
         createAccount: "Create Account",
-        welcomeBack: "Welcome back to Iraq Compass",
+        welcomeBack: "Welcome back to HUMUS",
         joinEcosystem: "Join the Social Business Ecosystem",
         roleUser: "Visitor",
         roleOwner: "Business Owner",

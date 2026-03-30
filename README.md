@@ -1,6 +1,6 @@
-# Iraq Compass (Supabase-only)
+# HUMUS
 
-Iraq Compass is a production-focused Iraq business directory app that uses **Supabase as the only backend**.
+HUMUS is a production-focused Iraq business directory app that uses **Supabase as the only backend**.
 
 ## What this app includes
 
@@ -40,8 +40,6 @@ Iraq Compass is a production-focused Iraq business directory app that uses **Sup
 ```bash
 npm run lint
 npm run build
-./scripts/preflight.sh
-./scripts/verify-deploy.sh
 ```
 
 ## Deployment notes

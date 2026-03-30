@@ -15,7 +15,7 @@ import type { User as SupabaseAuthUser } from '@supabase/supabase-js';
 import { translations } from './constants';
 
 const getTranslation = (key: string) => {
-  const lang = (localStorage.getItem('iraq-compass-lang') as 'en' | 'ar' | 'ku') || 'en';
+  const lang = (localStorage.getItem('humus-lang') as 'en' | 'ar' | 'ku') || 'en';
   const keys = key.split('.');
   let result: any = translations[lang];
   for (const k of keys) {
@@ -91,7 +91,7 @@ const MainContent: React.FC = () => {
   const [showOwnerMessage, setShowOwnerMessage] = useState(false);
   const [highContrast, setHighContrast] = useState(() => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('iraq-compass-high-contrast') === 'true';
+      return localStorage.getItem('humus-high-contrast') === 'true';
     }
     return false;
   });
@@ -150,10 +150,10 @@ const MainContent: React.FC = () => {
   useEffect(() => {
     if (highContrast) {
       document.documentElement.setAttribute('data-contrast', 'high');
-      localStorage.setItem('iraq-compass-high-contrast', 'true');
+      localStorage.setItem('humus-high-contrast', 'true');
     } else {
       document.documentElement.removeAttribute('data-contrast');
-      localStorage.setItem('iraq-compass-high-contrast', 'false');
+      localStorage.setItem('humus-high-contrast', 'false');
     }
   }, [highContrast]);
 
