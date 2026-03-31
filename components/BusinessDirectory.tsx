@@ -120,13 +120,12 @@ export const BusinessDirectory: React.FC<BusinessDirectoryProps> = ({ initialFil
     setIsLoading(true);
     setError(null);
     try {
-        const result = await api.getBusinesses({
+        const result = await getBusinessesFromSupabase({
             category: filters.category,
             city: filters.city,
             governorate: filters.governorate,
-            rating: filters.rating,
-            lastDoc: isLoadMore ? lastDoc : undefined,
-            limit: pageSize
+            page: isLoadMore ? (lastDoc || 1) : 1,
+            pageSize: pageSize
         });
         
         if (isLoadMore) {
@@ -135,7 +134,7 @@ export const BusinessDirectory: React.FC<BusinessDirectoryProps> = ({ initialFil
             setBusinessesData(result.data);
         }
         
-        setLastDoc(result.lastDoc);
+        setLastDoc(result.hasMore ? (lastDoc || 1) + 1 : undefined);
         setHasMore(result.hasMore);
     } catch (err) {
         console.error('Error fetching businesses:', err);
