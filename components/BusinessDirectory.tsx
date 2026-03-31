@@ -1,17 +1,39 @@
 import React, { useState, useEffect } from 'react';
 import { categories, governorates } from '../constants';
-import { api } from '../services/api';
+import { getBusinessesFromSupabase } from '../services/supabase';
 import type { Business } from '../types';
-import { Star, Grid3x3, List, MapPin, CheckCircle, ArrowLeft } from './icons';
+import { Star, Grid3x3, List, MapPin, CheckCircle, ArrowLeft, Phone, Navigation, ExternalLink } from './icons';
 import { useTranslations } from '../hooks/useTranslations';
 import { GlassCard } from './GlassCard';
 
 interface BusinessCardProps {
   business: Business;
   viewMode: 'grid' | 'list';
+  onClick?: (business: Business) => void;
 }
 
-const BusinessCard: React.FC<BusinessCardProps> = ({ business, viewMode }) => {
+// Generate Google Maps directions link
+const getDirectionsUrl = (business: Business) => {
+  if (business.lat && business.lng) {
+    return `https://www.google.com/maps/dir/?api=1&destination=${business.lat},${business.lng}`;
+  }
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(business.name + ' ' + (business.city || ''))}`;
+};
+
+// Generate phone call link
+const getPhoneUrl = (phone?: string) => {
+  if (!phone) return null;
+  return `tel:${phone.replace(/\s/g, '')}`;
+};
+
+// Generate WhatsApp link
+const getWhatsappUrl = (phone?: string) => {
+  if (!phone) return null;
+  const cleanPhone = phone.replace(/\D/g, '');
+  return `https://wa.me/${cleanPhone}`;
+};
+
+const BusinessCard: React.FC<BusinessCardProps> = ({ business, viewMode, onClick }) => {
   const { t, lang } = useTranslations();
   
   const displayName = lang === 'ar' && business.nameAr ? business.nameAr : 
@@ -21,6 +43,9 @@ const BusinessCard: React.FC<BusinessCardProps> = ({ business, viewMode }) => {
   const displayImage = business.imageUrl || business.coverImage || 'https://images.unsplash.com/photo-1483366774565-c783b9f70e2c';
   const displayReviews = business.reviewCount ?? 0;
   const isVerified = business.isVerified ?? false;
+  const directionsUrl = getDirectionsUrl(business);
+  const phoneUrl = getPhoneUrl(business.phone);
+  const whatsappUrl = getWhatsappUrl(business.phone);
 
   if (viewMode === 'list') {
     return (

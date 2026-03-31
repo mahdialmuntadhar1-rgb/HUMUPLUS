@@ -75,6 +75,8 @@ export {
   Volume2,
   Heart,
   Navigation,
+  Phone,
+  ExternalLink,
   Trash2,
   Grid3x3,
   List,
