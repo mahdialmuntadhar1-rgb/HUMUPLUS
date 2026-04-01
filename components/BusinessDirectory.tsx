@@ -22,14 +22,27 @@ const getDirectionsUrl = (business: Business) => {
 
 // Generate phone call link
 const getPhoneUrl = (phone?: string) => {
-  if (!phone) return null;
-  return `tel:${phone.replace(/\s/g, '')}`;
+  if (!phone || phone.trim() === '') return null;
+  // Format Iraqi phone number
+  let cleanPhone = phone.replace(/\s/g, '').replace(/-/g, '');
+  // Ensure it starts with country code
+  if (cleanPhone.startsWith('0')) {
+    cleanPhone = '+964' + cleanPhone.substring(1);
+  } else if (!cleanPhone.startsWith('+')) {
+    cleanPhone = '+964' + cleanPhone;
+  }
+  return `tel:${cleanPhone}`;
 };
 
 // Generate WhatsApp link
 const getWhatsappUrl = (phone?: string) => {
-  if (!phone) return null;
-  const cleanPhone = phone.replace(/\D/g, '');
+  if (!phone || phone.trim() === '') return null;
+  let cleanPhone = phone.replace(/\D/g, '');
+  if (cleanPhone.startsWith('0')) {
+    cleanPhone = '964' + cleanPhone.substring(1);
+  } else if (!cleanPhone.startsWith('964')) {
+    cleanPhone = '964' + cleanPhone;
+  }
   return `https://wa.me/${cleanPhone}`;
 };
 
@@ -125,19 +138,25 @@ const BusinessCard: React.FC<BusinessCardProps> = ({ business, viewMode }) => {
         {/* Action buttons */}
         <div className="grid grid-cols-2 gap-3">
           {phoneUrl ? (
-            <a href={phoneUrl} className="py-3 rounded-xl bg-gradient-to-r from-primary to-secondary text-white font-semibold text-center hover:shadow-glow-primary transition-all flex items-center justify-center gap-2">
+            <button 
+              onClick={() => window.open(phoneUrl, '_self')}
+              className="py-3 rounded-xl bg-gradient-to-r from-primary to-secondary text-white font-semibold text-center hover:shadow-glow-primary transition-all flex items-center justify-center gap-2"
+            >
               <Phone className="w-4 h-4" />
               {t('directory.call') || 'Call'}
-            </a>
+            </button>
           ) : (
             <div className="py-3 rounded-xl bg-white/5 text-white/40 font-semibold text-center cursor-not-allowed">
               {t('directory.noPhone') || 'No Phone'}
             </div>
           )}
-          <a href={directionsUrl} target="_blank" rel="noopener noreferrer" className="py-3 rounded-xl backdrop-blur-xl bg-white/10 border border-white/20 text-white font-semibold text-center hover:bg-white/20 transition-all flex items-center justify-center gap-2">
+          <button 
+            onClick={() => window.open(directionsUrl, '_blank')}
+            className="py-3 rounded-xl backdrop-blur-xl bg-white/10 border border-white/20 text-white font-semibold text-center hover:bg-white/20 transition-all flex items-center justify-center gap-2"
+          >
             <Navigation className="w-4 h-4" />
             {t('directory.maps') || 'Maps'}
-          </a>
+          </button>
         </div>
       </div>
     </GlassCard>
@@ -156,7 +175,7 @@ export const BusinessDirectory: React.FC<BusinessDirectoryProps> = ({ initialFil
     city: initialFilter?.city || '',
   });
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [pageSize] = useState(20);
+  const [pageSize] = useState(100);  // Show 100 businesses at once
   const [businessesData, setBusinessesData] = useState<Business[]>([]);
   const [lastDoc, setLastDoc] = useState<number | undefined>(undefined);
   const [hasMore, setHasMore] = useState(false);

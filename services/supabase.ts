@@ -65,7 +65,7 @@ export async function getBusinessesFromSupabase(options?: {
     }
 
     const page = options?.page || 1;
-    const pageSize = options?.pageSize || 9;
+    const pageSize = options?.pageSize || 50;  // Show 50 businesses per page
     const start = (page - 1) * pageSize;
     
     query = query.range(start, start + pageSize - 1);
