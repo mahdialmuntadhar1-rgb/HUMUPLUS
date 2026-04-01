@@ -5,6 +5,7 @@ import { Sparkles } from './icons';
 import { useTranslations } from '../hooks/useTranslations';
 import { GlassCard } from './GlassCard';
 import { motion, AnimatePresence } from 'motion/react';
+import { getCategoryCounts } from '../services/supabase';
 
 interface CategoryGridProps {
   onCategoryClick: (category: Category) => void;
@@ -24,12 +25,47 @@ const ITEMS_PER_PAGE = 9;
 
 export const CategoryGrid: React.FC<CategoryGridProps> = ({ onCategoryClick, currentPage, setCurrentPage }) => {
     const [loading, setLoading] = useState(true);
+    const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
     const { t } = useTranslations();
 
     useEffect(() => {
-        const timer = setTimeout(() => setLoading(false), 1500); // Simulate loading time
-        return () => clearTimeout(timer);
+        const fetchCounts = async () => {
+            setLoading(true);
+            try {
+                const counts = await getCategoryCounts();
+                setCategoryCounts(counts);
+            } catch (error) {
+                console.error('Error fetching category counts:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchCounts();
     }, []);
+
+    const getCategoryCount = (categoryId: string): number => {
+        // Map category IDs to database category names
+        const categoryMap: Record<string, string[]> = {
+            'food_drink': ['food', 'drink', 'restaurant', 'cafe', 'bakery'],
+            'shopping': ['shop', 'store', 'retail', 'mall', 'market'],
+            'events_entertainment': ['entertainment', 'events', 'cinema', 'theater'],
+            'accommodation': ['hotel', 'accommodation', 'stay'],
+            'culture_heritage': ['culture', 'heritage', 'museum', 'historical'],
+            'business_services': ['business', 'services', 'office'],
+            'health_wellness': ['health', 'wellness', 'hospital', 'clinic', 'pharmacy'],
+            'transport_mobility': ['transport', 'mobility', 'car', 'taxi'],
+            'public_essential': ['public', 'essential', 'government', 'bank']
+        };
+        
+        const possibleNames = categoryMap[categoryId] || [categoryId];
+        let total = 0;
+        for (const [cat, count] of Object.entries(categoryCounts)) {
+            if (possibleNames.some(name => cat.toLowerCase().includes(name.toLowerCase()))) {
+                total += count;
+            }
+        }
+        return total;
+    };
 
     const totalPages = Math.ceil(categories.length / ITEMS_PER_PAGE);
     const paginatedCategories = categories.slice(
@@ -99,7 +135,7 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({ onCategoryClick, cur
                                             {t(category.nameKey)}
                                         </h3>
                                         <div className="px-3 py-1 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-xs text-white/80">
-                                            {category.eventCount} {t('categories.events')}
+                                            {getCategoryCount(category.id)} {t('categories.businesses')}
                                         </div>
                                         {category.recommended && (
                                             <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-gradient-to-br from-accent to-primary flex items-center justify-center animate-pulse">

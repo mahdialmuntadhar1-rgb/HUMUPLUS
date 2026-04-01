@@ -87,3 +87,25 @@ export async function getBusinessesFromSupabase(options?: {
     return { data: [], total: 0, hasMore: false };
   }
 }
+
+// Get business counts by category
+export async function getCategoryCounts(): Promise<Record<string, number>> {
+  try {
+    const { data, error } = await supabase
+      .from('businesses')
+      .select('category');
+
+    if (error) throw error;
+
+    const counts: Record<string, number> = {};
+    data?.forEach((biz: any) => {
+      const cat = biz.category || 'Uncategorized';
+      counts[cat] = (counts[cat] || 0) + 1;
+    });
+
+    return counts;
+  } catch (error) {
+    console.error('Error fetching category counts:', error);
+    return {};
+  }
+}
