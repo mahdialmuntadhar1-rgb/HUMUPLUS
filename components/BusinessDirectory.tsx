@@ -33,7 +33,7 @@ const getWhatsappUrl = (phone?: string) => {
   return `https://wa.me/${cleanPhone}`;
 };
 
-const BusinessCard: React.FC<BusinessCardProps> = ({ business, viewMode, onClick }) => {
+const BusinessCard: React.FC<BusinessCardProps> = ({ business, viewMode }) => {
   const { t, lang } = useTranslations();
   
   const displayName = lang === 'ar' && business.nameAr ? business.nameAr : 
@@ -54,14 +54,38 @@ const BusinessCard: React.FC<BusinessCardProps> = ({ business, viewMode, onClick
         <div className="flex-1">
           <h3 className="text-white font-semibold text-lg mb-1">{displayName}</h3>
           <p className="text-white/60 text-sm mb-2">{t(categories.find(c => c.id === business.category)?.nameKey || business.category)}</p>
-          <div className="flex items-center gap-4 text-sm">
+          
+          {/* Address */}
+          {business.address && (
+            <div className="flex items-center gap-1 text-white/50 text-sm mb-1">
+              <MapPin className="w-3.5 h-3.5" />
+              <span className="truncate">{business.address}</span>
+            </div>
+          )}
+          
+          {/* Phone */}
+          {business.phone && (
+            <div className="flex items-center gap-1 text-white/50 text-sm">
+              <Phone className="w-3.5 h-3.5" />
+              <span dir="ltr">{business.phone}</span>
+            </div>
+          )}
+          
+          <div className="flex items-center gap-4 text-sm mt-2">
             <div className="flex items-center gap-1"><Star className="w-4 h-4 text-accent fill-accent" /><span className="text-white">{business.rating}</span></div>
             <div className="flex items-center gap-1 text-white/60"><MapPin className="w-4 h-4" />{business.distance ? `${business.distance} km` : (business.city || t('directory.city'))}</div>
           </div>
         </div>
         <div className="flex flex-col justify-center gap-2">
-          <button className="px-4 py-2 rounded-xl bg-gradient-to-r from-primary to-secondary text-white font-medium text-sm">{t('directory.view')}</button>
-          <button className="px-4 py-2 rounded-xl backdrop-blur-xl bg-white/10 border border-white/20 text-white font-medium text-sm">{t('directory.contact')}</button>
+          {phoneUrl && (
+            <a href={phoneUrl} className="px-4 py-2 rounded-xl bg-gradient-to-r from-primary to-secondary text-white font-medium text-sm text-center hover:shadow-glow-primary transition-all">
+              {t('directory.call') || 'Call'}
+            </a>
+          )}
+          <a href={directionsUrl} target="_blank" rel="noopener noreferrer" className="px-4 py-2 rounded-xl backdrop-blur-xl bg-white/10 border border-white/20 text-white font-medium text-sm text-center hover:bg-white/20 transition-all flex items-center justify-center gap-1">
+            <Navigation className="w-4 h-4" />
+            {t('directory.maps') || 'Maps'}
+          </a>
         </div>
       </GlassCard>
     );
@@ -76,11 +100,45 @@ const BusinessCard: React.FC<BusinessCardProps> = ({ business, viewMode, onClick
       <div className="p-5">
         <h3 className="text-white font-semibold text-lg mb-2">{displayName}</h3>
         <p className="text-white/60 text-sm mb-3">{t(categories.find(c => c.id === business.category)?.nameKey || business.category)}</p>
-        <div className="flex items-center justify-between">
+        
+        {/* Address */}
+        {business.address && (
+          <div className="flex items-center gap-1.5 text-white/50 text-sm mb-2">
+            <MapPin className="w-4 h-4 text-primary flex-shrink-0" />
+            <span className="truncate">{business.address}</span>
+          </div>
+        )}
+        
+        {/* Phone */}
+        {business.phone && (
+          <div className="flex items-center gap-1.5 text-white/50 text-sm mb-3" dir="ltr">
+            <Phone className="w-4 h-4 text-primary flex-shrink-0" />
+            <span>{business.phone}</span>
+          </div>
+        )}
+        
+        <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-1"><Star className="w-4 h-4 text-accent fill-accent" /><span className="text-white font-medium">{business.rating}</span><span className="text-white/60 text-sm">({displayReviews})</span></div>
           <div className="flex items-center gap-1 text-white/60 text-sm"><MapPin className="w-4 h-4" />{business.distance ? `${business.distance} km` : (business.city || t('directory.city'))}</div>
         </div>
-        <button className="w-full mt-4 py-3 rounded-xl bg-gradient-to-r from-primary to-secondary text-white font-semibold hover:shadow-glow-primary transition-all">{t('directory.viewProfile')}</button>
+        
+        {/* Action buttons */}
+        <div className="grid grid-cols-2 gap-3">
+          {phoneUrl ? (
+            <a href={phoneUrl} className="py-3 rounded-xl bg-gradient-to-r from-primary to-secondary text-white font-semibold text-center hover:shadow-glow-primary transition-all flex items-center justify-center gap-2">
+              <Phone className="w-4 h-4" />
+              {t('directory.call') || 'Call'}
+            </a>
+          ) : (
+            <div className="py-3 rounded-xl bg-white/5 text-white/40 font-semibold text-center cursor-not-allowed">
+              {t('directory.noPhone') || 'No Phone'}
+            </div>
+          )}
+          <a href={directionsUrl} target="_blank" rel="noopener noreferrer" className="py-3 rounded-xl backdrop-blur-xl bg-white/10 border border-white/20 text-white font-semibold text-center hover:bg-white/20 transition-all flex items-center justify-center gap-2">
+            <Navigation className="w-4 h-4" />
+            {t('directory.maps') || 'Maps'}
+          </a>
+        </div>
       </div>
     </GlassCard>
   );

@@ -1,10 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import type { Business } from '../types';
-import { Crown, Star, MapPin, ChevronRight, ChevronLeft, X } from './icons';
+import { Crown, Star, MapPin, ChevronRight, ChevronLeft, Phone, Navigation } from './icons';
 import { useTranslations } from '../hooks/useTranslations';
 import { GlassCard } from './GlassCard';
 import { motion } from 'motion/react';
+
+// Generate Google Maps directions link
+const getDirectionsUrl = (business: Business) => {
+  if (business.lat && business.lng) {
+    return `https://www.google.com/maps/dir/?api=1&destination=${business.lat},${business.lng}`;
+  }
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(business.name + ' ' + (business.city || ''))}`;
+};
+
+// Generate phone call link
+const getPhoneUrl = (phone?: string) => {
+  if (!phone) return null;
+  return `tel:${phone.replace(/\s/g, '')}`;
+};
 
 interface FeaturedBusinessesProps {
   selectedGovernorate: string;
@@ -13,7 +27,6 @@ interface FeaturedBusinessesProps {
 export const FeaturedBusinesses: React.FC<FeaturedBusinessesProps> = ({ selectedGovernorate }) => {
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedBusiness, setSelectedBusiness] = useState<Business | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { t, lang } = useTranslations();
   const scrollRef = React.useRef<HTMLDivElement>(null);
@@ -92,6 +105,8 @@ export const FeaturedBusinesses: React.FC<FeaturedBusinessesProps> = ({ selected
               const displayName = lang === 'ar' && business.nameAr ? business.nameAr : lang === 'ku' && business.nameKu ? business.nameKu : business.name;
               const displayImage = business.coverImage || business.imageUrl || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5';
               const isPremium = business.isPremium || business.isFeatured;
+              const directionsUrl = getDirectionsUrl(business);
+              const phoneUrl = getPhoneUrl(business.phone);
 
               return (
                 <motion.div key={business.id} initial={{ opacity: 0, x: 50 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: index * 0.1 }} className="flex-shrink-0 w-85 snap-center">
@@ -121,19 +136,42 @@ export const FeaturedBusinesses: React.FC<FeaturedBusinessesProps> = ({ selected
                     </div>
 
                     <div className="p-6">
-                      <div className="mb-6">
+                      <div className="mb-4">
                         <h3 className="text-white font-bold text-2xl mb-2 group-hover:text-primary transition-colors">{displayName}</h3>
-                        <div className="flex items-center gap-2 text-white/40 text-sm">
-                          <MapPin className="w-4 h-4 text-primary" />
-                          <span>{business.governorate || 'Baghdad'}</span>
-                          <span className="w-1 h-1 rounded-full bg-white/20" />
-                          <span>{t(`categories.${business.category}`)}</span>
-                        </div>
+                        
+                        {/* Address */}
+                        {business.address && (
+                          <div className="flex items-center gap-1.5 text-white/50 text-sm mb-1.5">
+                            <MapPin className="w-4 h-4 text-primary flex-shrink-0" />
+                            <span className="truncate">{business.address}</span>
+                          </div>
+                        )}
+                        
+                        {/* Phone */}
+                        {business.phone && (
+                          <div className="flex items-center gap-1.5 text-white/50 text-sm" dir="ltr">
+                            <Phone className="w-4 h-4 text-primary flex-shrink-0" />
+                            <span>{business.phone}</span>
+                          </div>
+                        )}
                       </div>
 
-                      <div className="grid grid-cols-2 gap-4">
-                        <button onClick={() => setSelectedBusiness(business)} className="px-5 py-3 rounded-xl bg-gradient-to-r from-primary to-secondary text-white font-bold text-sm hover:shadow-glow-primary transition-all duration-300 transform active:scale-95">{t('actions.book')}</button>
-                        <button onClick={() => setSelectedBusiness(business)} className="px-5 py-3 rounded-xl backdrop-blur-xl bg-white/5 border border-white/10 text-white font-bold text-sm hover:bg-white/10 transition-all duration-300 transform active:scale-95">{t('actions.details')}</button>
+                      {/* Action buttons */}
+                      <div className="grid grid-cols-2 gap-3">
+                        {phoneUrl ? (
+                          <a href={phoneUrl} className="px-5 py-3 rounded-xl bg-gradient-to-r from-primary to-secondary text-white font-bold text-sm text-center hover:shadow-glow-primary transition-all duration-300 transform active:scale-95 flex items-center justify-center gap-2">
+                            <Phone className="w-4 h-4" />
+                            {t('actions.call') || 'Call'}
+                          </a>
+                        ) : (
+                          <div className="px-5 py-3 rounded-xl bg-white/5 text-white/40 font-bold text-sm text-center cursor-not-allowed">
+                            {t('actions.noPhone') || 'No Phone'}
+                          </div>
+                        )}
+                        <a href={directionsUrl} target="_blank" rel="noopener noreferrer" className="px-5 py-3 rounded-xl backdrop-blur-xl bg-white/5 border border-white/10 text-white font-bold text-sm text-center hover:bg-white/10 transition-all duration-300 transform active:scale-95 flex items-center justify-center gap-2">
+                          <Navigation className="w-4 h-4" />
+                          {t('actions.maps') || 'Maps'}
+                        </a>
                       </div>
                     </div>
                   </GlassCard>
@@ -143,19 +181,6 @@ export const FeaturedBusinesses: React.FC<FeaturedBusinessesProps> = ({ selected
           )}
         </div>
       </div>
-
-      {selectedBusiness && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setSelectedBusiness(null)}>
-          <div className="w-full max-w-lg rounded-2xl bg-dark-bg border border-white/20 p-6" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-start justify-between mb-4">
-              <h3 className="text-xl font-bold text-white">{selectedBusiness.name}</h3>
-              <button onClick={() => setSelectedBusiness(null)} className="text-white/60 hover:text-white"><X className="w-5 h-5" /></button>
-            </div>
-            <p className="text-white/70 mb-3">{selectedBusiness.description || t('featured.subtitle')}</p>
-            <p className="text-white/50 text-sm">{t('actions.viewBusinesses')} · {selectedBusiness.governorate || 'Iraq'}</p>
-          </div>
-        </div>
-      )}
     </section>
   );
 };
