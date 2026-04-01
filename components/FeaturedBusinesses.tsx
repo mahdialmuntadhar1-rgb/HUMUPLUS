@@ -36,7 +36,8 @@ export const FeaturedBusinesses: React.FC<FeaturedBusinessesProps> = ({ selected
       setIsLoading(true);
       setError(null);
       try {
-        const result = await api.getBusinesses({ featuredOnly: true, governorate: selectedGovernorate, limit: 10 });
+        // Fetch all businesses (not just featured) with higher rating
+        const result = await api.getBusinesses({ governorate: selectedGovernorate, rating: 4.0, limit: 10 });
         setBusinesses(result.data);
       } catch (error) {
         console.error('Error fetching featured businesses:', error);
@@ -63,6 +64,17 @@ export const FeaturedBusinesses: React.FC<FeaturedBusinessesProps> = ({ selected
         <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
         <p className="text-white/40 font-medium animate-pulse">{t('featured.loading') || 'Finding premium spots...'}</p>
       </div>
+    );
+  }
+
+  if (businesses.length === 0) {
+    return (
+      <section className="py-24 relative overflow-hidden" id="featured-section">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-4xl lg:text-5xl font-bold text-white mb-4">{t('featured.title')}</h2>
+          <p className="text-white/60 text-lg">No businesses found for this location.</p>
+        </div>
+      </section>
     );
   }
 
