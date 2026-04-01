@@ -44,24 +44,24 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({ onCategoryClick, cur
     }, []);
 
     const getCategoryCount = (categoryId: string): number => {
-        // Map category IDs to database category names
+        // Map frontend category IDs to actual database category names
         const categoryMap: Record<string, string[]> = {
-            'food_drink': ['food', 'drink', 'restaurant', 'cafe', 'bakery'],
-            'shopping': ['shop', 'store', 'retail', 'mall', 'market'],
-            'events_entertainment': ['entertainment', 'events', 'cinema', 'theater'],
-            'accommodation': ['hotel', 'accommodation', 'stay'],
-            'culture_heritage': ['culture', 'heritage', 'museum', 'historical'],
-            'business_services': ['business', 'services', 'office'],
-            'health_wellness': ['health', 'wellness', 'hospital', 'clinic', 'pharmacy'],
-            'transport_mobility': ['transport', 'mobility', 'car', 'taxi'],
-            'public_essential': ['public', 'essential', 'government', 'bank']
+            'food_drink': ['cafe', 'restaurant', 'food', 'drink', 'bakery', 'coffee', 'tea'],
+            'shopping': ['clothes', 'electronics', 'furniture', 'supermarket', 'shop', 'store', 'retail', 'mall', 'market'],
+            'events_entertainment': ['cinema', 'theater', 'events', 'entertainment', 'film'],
+            'accommodation': ['hotel', 'accommodation', 'stay', 'bed'],
+            'culture_heritage': ['mosque', 'culture', 'heritage', 'museum', 'historical', 'landmark'],
+            'business_services': ['bank', 'business', 'services', 'office'],
+            'health_wellness': ['hospital', 'pharmacy', 'gym', 'health', 'wellness', 'clinic'],
+            'transport_mobility': ['fuel', 'bus_station', 'transport', 'car', 'taxi', 'mobility'],
+            'public_essential': ['school', 'public', 'essential', 'government', 'siren']
         };
         
         const possibleNames = categoryMap[categoryId] || [categoryId];
         let total = 0;
         for (const [cat, count] of Object.entries(categoryCounts)) {
             if (possibleNames.some(name => cat.toLowerCase().includes(name.toLowerCase()))) {
-                total += count;
+                total += count as number;
             }
         }
         return total;
