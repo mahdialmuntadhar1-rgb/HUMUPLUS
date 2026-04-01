@@ -1,19 +1,19 @@
 import React from 'react';
 import { SearchPortal } from './SearchPortal';
-import { GovernorateFilter } from './GovernorateFilter';
+import { CityFilter } from './CityFilter';
 import { useTranslations } from '../hooks/useTranslations';
 import { motion } from 'motion/react';
 
 interface SearchSectionProps {
     onSearch: (query: string) => void;
-    selectedGovernorate: string;
-    onGovernorateChange: (gov: string) => void;
+    selectedCity: string;
+    onCityChange: (city: string) => void;
 }
 
 export const SearchSection: React.FC<SearchSectionProps> = ({ 
     onSearch, 
-    selectedGovernorate, 
-    onGovernorateChange 
+    selectedCity, 
+    onCityChange 
 }) => {
     const { t } = useTranslations();
 
@@ -40,11 +40,11 @@ export const SearchSection: React.FC<SearchSectionProps> = ({
                         <div className="w-8 h-8 rounded-lg bg-secondary/20 flex items-center justify-center">
                             <div className="w-2 h-2 rounded-full bg-secondary animate-pulse" />
                         </div>
-                        {t('governorates.title') || 'Governorates'}
+                        {t('cities.title') || 'Cities'}
                     </h3>
-                    <GovernorateFilter 
-                        selectedGovernorate={selectedGovernorate}
-                        onGovernorateChange={onGovernorateChange}
+                    <CityFilter 
+                        selectedCity={selectedCity}
+                        onCityChange={onCityChange}
                     />
                 </div>
             </motion.div>

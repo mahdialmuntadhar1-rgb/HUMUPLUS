@@ -84,8 +84,8 @@ const MainContent: React.FC = () => {
   const [page, setPage] = useState<'home' | 'dashboard' | 'listing'>('home');
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [currentPage, setCurrentPage] = useState(0);
-  const [listingFilter, setListingFilter] = useState<{ categoryId?: string; city?: string; governorate?: string } | null>(null);
-  const [selectedGovernorate, setSelectedGovernorate] = useState('all');
+  const [listingFilter, setListingFilter] = useState<{ categoryId?: string; city?: string } | null>(null);
+  const [selectedCity, setSelectedCity] = useState('all');
   const [posts, setPosts] = useState<Post[]>([]);
   const [isSocialLoading, setIsSocialLoading] = useState(true);
   const [showOwnerMessage, setShowOwnerMessage] = useState(false);
@@ -198,22 +198,22 @@ const MainContent: React.FC = () => {
   };
 
   const handleSearch = (query: string) => {
-    setListingFilter({ city: query, governorate: selectedGovernorate !== 'all' ? selectedGovernorate : undefined });
+    setListingFilter({ city: query });
     setPage('listing');
   };
 
-  const handleGovernorateChange = (gov: string) => {
-    setSelectedGovernorate(gov);
+  const handleCityChange = (city: string) => {
+    setSelectedCity(city);
     if (page === 'listing') {
-        setListingFilter(prev => ({ ...prev, governorate: gov !== 'all' ? gov : undefined }));
+        setListingFilter(prev => ({ ...prev, city: city !== 'all' ? city : undefined }));
     }
   };
 
 
   const visiblePosts = React.useMemo(() => {
-    if (selectedGovernorate === 'all') return posts;
-    return posts.filter((post) => (post.governorate || '').toLowerCase() === selectedGovernorate);
-  }, [posts, selectedGovernorate]);
+    if (selectedCity === 'all') return posts;
+    return posts.filter((post) => (post.city || '').toLowerCase() === selectedCity);
+  }, [posts, selectedCity]);
 
   const handleJoinOwner = () => {
     if (!isLoggedIn) {
@@ -265,8 +265,8 @@ const MainContent: React.FC = () => {
                 currentPage={currentPage}
                 setCurrentPage={setCurrentPage}
                 onSearch={handleSearch}
-                selectedGovernorate={selectedGovernorate}
-                onGovernorateChange={handleGovernorateChange}
+                selectedCity={selectedCity}
+                onCityChange={handleCityChange}
                 highContrast={highContrast}
                 setHighContrast={setHighContrast}
                 onJoinOwner={handleJoinOwner}

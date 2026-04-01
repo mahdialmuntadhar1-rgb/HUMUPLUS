@@ -236,31 +236,34 @@ export const categories: Category[] = [
   },
 ];
 
-
-
-
-// Governorates
-export const governorates = [
-    { id: 'all', nameKey: 'governorates.all' },
-    { id: 'baghdad', nameKey: 'governorates.baghdad' },
-    { id: 'basra', nameKey: 'governorates.basra' },
-    { id: 'erbil', nameKey: 'governorates.erbil' },
-    { id: 'sulaymaniyah', nameKey: 'governorates.sulaymaniyah' },
-    { id: 'dohuk', nameKey: 'governorates.dohuk' },
-    { id: 'nineveh', nameKey: 'governorates.nineveh' },
-    { id: 'anbar', nameKey: 'governorates.anbar' },
-    { id: 'babil', nameKey: 'governorates.babil' },
-    { id: 'karbala', nameKey: 'governorates.karbala' },
-    { id: 'najaf', nameKey: 'governorates.najaf' },
-    { id: 'qadisiyyah', nameKey: 'governorates.qadisiyyah' },
-    { id: 'wasit', nameKey: 'governorates.wasit' },
-    { id: 'maysan', nameKey: 'governorates.maysan' },
-    { id: 'dhi_qar', nameKey: 'governorates.dhi_qar' },
-    { id: 'muthanna', nameKey: 'governorates.muthanna' },
-    { id: 'diyala', nameKey: 'governorates.diyala' },
-    { id: 'kirkuk', nameKey: 'governorates.kirkuk' },
-    { id: 'salah_al_din', nameKey: 'governorates.salah_al_din' },
+// Cities (Major Iraqi city centers only - no suburbs)
+export const cities = [
+    { id: 'all', nameKey: 'cities.all' },
+    { id: 'baghdad', nameKey: 'cities.baghdad' },
+    { id: 'basra', nameKey: 'cities.basra' },
+    { id: 'mosul', nameKey: 'cities.mosul' },
+    { id: 'erbil', nameKey: 'cities.erbil' },
+    { id: 'najaf', nameKey: 'cities.najaf' },
+    { id: 'karbala', nameKey: 'cities.karbala' },
+    { id: 'sulaymaniyah', nameKey: 'cities.sulaymaniyah' },
+    { id: 'kirkuk', nameKey: 'cities.kirkuk' },
+    { id: 'ramadi', nameKey: 'cities.ramadi' },
+    { id: 'fallujah', nameKey: 'cities.fallujah' },
+    { id: 'nasiriyah', nameKey: 'cities.nasiriyah' },
+    { id: 'amara', nameKey: 'cities.amara' },
+    { id: 'diwaniyah', nameKey: 'cities.diwaniyah' },
+    { id: 'kut', nameKey: 'cities.kut' },
+    { id: 'hillah', nameKey: 'cities.hillah' },
+    { id: 'samarra', nameKey: 'cities.samarra' },
+    { id: 'tikrit', nameKey: 'cities.tikrit' },
+    { id: 'dohuk', nameKey: 'cities.dohuk' },
+    { id: 'halabja', nameKey: 'cities.halabja' },
+    { id: 'baqubah', nameKey: 'cities.baqubah' },
+    { id: 'khanaqin', nameKey: 'cities.khanaqin' },
 ];
+
+// Governorates (deprecated - use cities instead)
+export const governorates = cities;
 
 // Intl formatter
 export const format = (date: Date, formatString: string) => {

@@ -44,9 +44,9 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({ onCategoryClick, cur
     }, []);
 
     const getCategoryCount = (categoryId: string): number => {
-        // Map frontend category IDs to actual database category names
+        // Map frontend category IDs to ACTUAL database category names
         const categoryMap: Record<string, string[]> = {
-            'food_drink': ['cafe', 'restaurant', 'food', 'drink', 'bakery', 'coffee', 'tea'],
+            'food_drink': ['cafe', 'restaurant', 'bakery', 'coffee', 'tea', 'food', 'drink'],
             'shopping': ['clothes', 'electronics', 'furniture', 'supermarket', 'shop', 'store', 'retail', 'mall', 'market'],
             'events_entertainment': ['cinema', 'theater', 'events', 'entertainment', 'film'],
             'accommodation': ['hotel', 'accommodation', 'stay', 'bed'],

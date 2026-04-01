@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { categories, governorates } from '../constants';
+import { categories, cities } from '../constants';
 import { getBusinessesFromSupabase } from '../services/supabase';
 import type { Business } from '../types';
 import { Star, Grid3x3, List, MapPin, CheckCircle, ArrowLeft, Phone, Navigation, ExternalLink } from './icons';
@@ -87,7 +87,7 @@ const BusinessCard: React.FC<BusinessCardProps> = ({ business, viewMode, onClick
 };
 
 interface BusinessDirectoryProps {
-    initialFilter?: { categoryId?: string; city?: string; governorate?: string };
+    initialFilter?: { categoryId?: string; city?: string };
     onBack?: () => void;
 }
 
@@ -96,7 +96,6 @@ export const BusinessDirectory: React.FC<BusinessDirectoryProps> = ({ initialFil
     category: initialFilter?.categoryId || 'all', 
     rating: 0,
     city: initialFilter?.city || '',
-    governorate: initialFilter?.governorate || 'all'
   });
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [pageSize] = useState(20);
@@ -112,7 +111,6 @@ export const BusinessDirectory: React.FC<BusinessDirectoryProps> = ({ initialFil
         category: initialFilter?.categoryId || 'all',
         rating: 0,
         city: initialFilter?.city || '',
-        governorate: initialFilter?.governorate || 'all'
     });
   }, [initialFilter]);
 
@@ -123,7 +121,6 @@ export const BusinessDirectory: React.FC<BusinessDirectoryProps> = ({ initialFil
         const result = await getBusinessesFromSupabase({
             category: filters.category,
             city: filters.city,
-            governorate: filters.governorate,
             page: isLoadMore ? (lastDoc || 1) : 1,
             pageSize: pageSize
         });
@@ -170,7 +167,7 @@ export const BusinessDirectory: React.FC<BusinessDirectoryProps> = ({ initialFil
             <GlassCard className="p-6">
               <h3 className="text-white font-semibold mb-4 flex items-center justify-between">
                 {t('directory.filters')}
-                <button onClick={() => setFilters({ category: 'all', rating: 0, city: '', governorate: 'all' })} className="text-xs text-secondary hover:text-secondary/80">
+                <button onClick={() => setFilters({ category: 'all', rating: 0, city: '' })} className="text-xs text-secondary hover:text-secondary/80">
                   {t('directory.reset')}
                 </button>
               </h3>
@@ -199,16 +196,17 @@ export const BusinessDirectory: React.FC<BusinessDirectoryProps> = ({ initialFil
               </div>
 
               <div className="mb-6">
-                <label className="block text-white/80 text-sm mb-2">{t('directory.governorate')}</label>
+                <label className="block text-white/80 text-sm mb-2">{t('directory.city')}</label>
                 <select 
-                  value={filters.governorate} 
-                  onChange={(e) => setFilters({ ...filters, governorate: e.target.value })} 
+                  value={filters.city} 
+                  onChange={(e) => setFilters({ ...filters, city: e.target.value })} 
                   className="w-full px-4 py-3 rounded-xl backdrop-blur-xl bg-white/10 border border-white/20 text-white outline-none appearance-none bg-no-repeat bg-right-4" 
                   style={{backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`, backgroundPosition: 'left 0.75rem center', backgroundSize: '1.5em 1.5em'}}
                 >
-                  {governorates.map(gov => (
-                    <option key={gov.id} value={gov.id} className="bg-dark-bg">
-                      {t(gov.nameKey)}
+                  <option value="" className="bg-dark-bg">{t('directory.allCities') || 'All Cities'}</option>
+                  {cities.filter(c => c.id !== 'all').map(city => (
+                    <option key={city.id} value={city.id} className="bg-dark-bg">
+                      {t(city.nameKey)}
                     </option>
                   ))}
                 </select>
