@@ -409,3 +409,6 @@ export const api = {
       handleSupabaseError(error, OperationType.WRITE, path);
       return { success: false };
  
+    }
+  },
+};
