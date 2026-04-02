@@ -23,6 +23,12 @@ const DB_CATEGORY_TO_UI: Record<string, string> = {
   'Culture & Heritage':     'culture_heritage',
   'Entertainment & Events': 'events_entertainment',
   'Transport & Mobility':   'transport_mobility',
+  // NEW: 5 additional categories
+  'Doctors':                'doctors',
+  'Lawyers':                'lawyers',
+  'Clinics':                'clinics',
+  'Hospitals':              'hospitals',
+  'Others':                 'others',
   // Lowercase (from 18-AGENTS scraper)
   'restaurants':            'food_drink',
   'cafes':                  'food_drink',
@@ -32,6 +38,12 @@ const DB_CATEGORY_TO_UI: Record<string, string> = {
   'beauty_salons':          'health_wellness',
   'pharmacies':             'public_essential',
   'supermarkets':           'shopping',
+  // NEW: lowercase for new categories
+  'doctors':                'doctors',
+  'lawyers':                'lawyers',
+  'clinics':                'clinics',
+  'hospitals':              'hospitals',
+  'others':                 'others',
 };
 
 // Transform Supabase business row → HUMUPLUS Business format
@@ -89,6 +101,12 @@ const UI_CATEGORY_TO_DB: Record<string, string[]> = {
   culture_heritage:     ['Culture & Heritage'],
   events_entertainment: ['Entertainment & Events'],
   transport_mobility:   ['Transport & Mobility'],
+  // NEW: 5 additional categories
+  doctors:              ['Doctors', 'doctors', 'doctor'],
+  lawyers:              ['Lawyers', 'lawyers', 'lawyer'],
+  clinics:              ['Clinics', 'clinics', 'clinic'],
+  hospitals:            ['Hospitals', 'hospitals', 'hospital'],
+  others:               ['Others', 'others', 'other', 'miscellaneous', 'uncategorized'],
 };
 
 // Fetch businesses from Supabase

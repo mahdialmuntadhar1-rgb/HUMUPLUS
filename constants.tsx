@@ -234,6 +234,40 @@ export const categories: Category[] = [
       ]},
     ]
   },
+  { id: 'doctors', icon: <>👨‍⚕️</>, nameKey: 'categories.doctors', eventCount: 40,
+    subcategories: [
+      { id: 'general_practitioners', icon: <>🩺</>, nameKey: 'subcategories.general_practitioners', count: 25 },
+      { id: 'specialists', icon: <>🫀</>, nameKey: 'subcategories.specialists', count: 30 },
+      { id: 'dentists', icon: <>🦷</>, nameKey: 'subcategories.dentists', count: 15 },
+    ]
+  },
+  { id: 'lawyers', icon: <>⚖️</>, nameKey: 'categories.lawyers', eventCount: 20,
+    subcategories: [
+      { id: 'criminal_law', icon: <>⚖️</>, nameKey: 'subcategories.criminal_law', count: 8 },
+      { id: 'civil_law', icon: <>📜</>, nameKey: 'subcategories.civil_law', count: 12 },
+      { id: 'corporate_law', icon: <>🏢</>, nameKey: 'subcategories.corporate_law', count: 6 },
+    ]
+  },
+  { id: 'clinics', icon: <>🏥</>, nameKey: 'categories.clinics', eventCount: 35,
+    subcategories: [
+      { id: 'medical_clinics', icon: <>🩺</>, nameKey: 'subcategories.medical_clinics', count: 40 },
+      { id: 'dental_clinics', icon: <>🦷</>, nameKey: 'subcategories.dental_clinics', count: 20 },
+      { id: 'eye_clinics', icon: <>👁️</>, nameKey: 'subcategories.eye_clinics', count: 12 },
+    ]
+  },
+  { id: 'hospitals', icon: <Hospital />, nameKey: 'categories.hospitals', eventCount: 50,
+    subcategories: [
+      { id: 'public_hospitals', icon: <>🏥</>, nameKey: 'subcategories.public_hospitals', count: 15 },
+      { id: 'private_hospitals', icon: <>💎</>, nameKey: 'subcategories.private_hospitals', count: 20 },
+      { id: 'specialized_hospitals', icon: <>🫀</>, nameKey: 'subcategories.specialized_hospitals', count: 8 },
+    ]
+  },
+  { id: 'others', icon: <>📦</>, nameKey: 'categories.others', eventCount: 100,
+    subcategories: [
+      { id: 'miscellaneous', icon: <>📦</>, nameKey: 'subcategories.miscellaneous', count: 50 },
+      { id: 'uncategorized', icon: <>❓</>, nameKey: 'subcategories.uncategorized', count: 30 },
+    ]
+  },
 ];
 
 // Cities (Major Iraqi city centers only - no suburbs)
@@ -365,6 +399,11 @@ export const translations = {
         transport_mobility: "Transport & Mobility",
         public_essential: "Public & Essential",
         education: "Education",
+        doctors: "Doctors",
+        lawyers: "Lawyers",
+        clinics: "Clinics",
+        hospitals: "Hospitals",
+        others: "Others",
     },
     subcategories: {
         selectOne: "Select a subcategory",
@@ -513,6 +552,25 @@ export const translations = {
         public_restrooms: "Public Restrooms",
         public_prayer_rooms: "Prayer Rooms",
         public_wifi: "Public Wi-Fi Zones",
+        // NEW: Doctors
+        general_practitioners: "General Practitioners",
+        specialists: "Specialists",
+        dentists: "Dentists",
+        // NEW: Lawyers
+        criminal_law: "Criminal Law",
+        civil_law: "Civil Law",
+        corporate_law: "Corporate Law",
+        // NEW: Clinics
+        medical_clinics: "Medical Clinics",
+        dental_clinics: "Dental Clinics",
+        eye_clinics: "Eye Clinics",
+        // NEW: Hospitals
+        public_hospitals: "Public Hospitals",
+        private_hospitals: "Private Hospitals",
+        specialized_hospitals: "Specialized Hospitals",
+        // NEW: Others
+        miscellaneous: "Miscellaneous",
+        uncategorized: "Uncategorized",
     },
     featured: {
         title: "Featured Businesses",

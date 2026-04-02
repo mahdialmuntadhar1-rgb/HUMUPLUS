@@ -54,7 +54,13 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({ onCategoryClick, cur
             'business_services': ['bank', 'business', 'services', 'office'],
             'health_wellness': ['hospital', 'pharmacy', 'gym', 'health', 'wellness', 'clinic'],
             'transport_mobility': ['fuel', 'bus_station', 'transport', 'car', 'taxi', 'mobility'],
-            'public_essential': ['school', 'public', 'essential', 'government', 'siren']
+            'public_essential': ['school', 'public', 'essential', 'government', 'siren'],
+            // NEW: 5 additional categories
+            'doctors': ['doctor', 'physician', 'medical doctor', 'gp', 'general practitioner'],
+            'lawyers': ['lawyer', 'attorney', 'legal', 'law firm', 'advocate'],
+            'clinics': ['clinic', 'medical clinic', 'health clinic', 'specialty clinic'],
+            'hospitals': ['hospital', 'medical center', 'health center', 'infirmary'],
+            'others': ['other', 'misc', 'miscellaneous', 'uncategorized', 'general'],
         };
         
         const possibleNames = categoryMap[categoryId] || [categoryId];
