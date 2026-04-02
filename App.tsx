@@ -86,6 +86,7 @@ const MainContent: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [listingFilter, setListingFilter] = useState<{ categoryId?: string; city?: string } | null>(null);
   const [selectedCity, setSelectedCity] = useState('all');
+  const [selectedGovernorate, setSelectedGovernorate] = useState('all');
   const [posts, setPosts] = useState<Post[]>([]);
   const [isSocialLoading, setIsSocialLoading] = useState(true);
   const [showOwnerMessage, setShowOwnerMessage] = useState(false);
@@ -267,6 +268,8 @@ const MainContent: React.FC = () => {
                 onSearch={handleSearch}
                 selectedCity={selectedCity}
                 onCityChange={handleCityChange}
+                selectedGovernorate={selectedGovernorate}
+                onGovernorateChange={setSelectedGovernorate}
                 highContrast={highContrast}
                 setHighContrast={setHighContrast}
                 onJoinOwner={handleJoinOwner}

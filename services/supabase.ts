@@ -10,34 +10,64 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// Transform Supabase business data to HUMUPLUS format
+// ─── DB category (full name) → UI short-ID ───────────────────────────────────
+const DB_CATEGORY_TO_UI: Record<string, string> = {
+  'Restaurants & Dining':   'food_drink',
+  'Cafés & Coffee':         'food_drink',
+  'Hotels & Stays':         'hotels_stays',
+  'Shopping & Retail':      'shopping',
+  'Health & Wellness':      'health_wellness',
+  'Business Services':      'business_services',
+  'Essential Services':     'public_essential',
+  'Culture & Heritage':     'culture_heritage',
+  'Entertainment & Events': 'events_entertainment',
+  'Transport & Mobility':   'transport_mobility',
+};
+
+// Transform Supabase business row → HUMUPLUS Business format
 function transformBusiness(data: any): Business {
   return {
-    id: data.id || data.fsq_id,
-    name: data.name,
-    nameAr: data.name_ar || data.local_name,
-    nameKu: data.name_ku,
-    category: data.category || data.foursquare_category || 'Restaurant',
-    subcategory: data.subcategory || data.user_category,
-    governorate: data.governorate || data.city,
-    city: data.city,
-    address: data.address,
-    phone: data.phone,
-    website: data.website,
-    lat: data.latitude,
-    lng: data.longitude,
+    id: String(data.id || data.fsq_id || ''),
+    name: data.name || '',
+    nameAr: data.name_ar || data.nameAr || '',
+    nameKu: data.name_ku || data.nameKu || '',
+    // Map full DB category name → UI short ID (fallback: keep original)
+    category: DB_CATEGORY_TO_UI[data.category] || data.category || 'business_services',
+    subcategory: data.subcategory || data.user_category || '',
+    governorate: data.governorate || '',
+    city: data.city || '',
+    address: data.address || '',
+    phone: data.phone || '',
+    website: data.website || '',
+    // ✅ FIXED: DB uses latitude/longitude (NOT lat/lng)
+    lat: data.latitude ?? data.lat ?? 0,
+    lng: data.longitude ?? data.lng ?? 0,
     rating: data.rating || 4.0,
-    reviewCount: data.review_count || 0,
-    isVerified: data.verified || data.data_quality === 'osm',
-    imageUrl: data.image_url || `https://picsum.photos/seed/${data.id || 'business'}/400/300`,
-    description: data.description,
-    descriptionAr: data.description_ar,
+    reviewCount: data.review_count || data.reviewCount || 0,
+    isVerified: data.verified ?? data.isVerified ?? false,
+    isFeatured: data.is_published ?? data.isFeatured ?? false,
+    imageUrl: data.image_url || data.imageUrl || `https://picsum.photos/seed/${data.id || 'business'}/400/300`,
+    description: data.description || data.address || '',
+    descriptionAr: data.description_ar || '',
     status: data.status || 'active',
-    distance: data.distance,
-    whatsapp: data.whatsapp,
+    distance: data.distance || 0,
+    whatsapp: data.whatsapp || data.phone || '',
     tags: data.tags || [],
   };
 }
+
+// ─── UI short-ID → DB full category name(s) ──────────────────────────────────
+const UI_CATEGORY_TO_DB: Record<string, string[]> = {
+  food_drink:           ['Restaurants & Dining', 'Cafés & Coffee'],
+  hotels_stays:         ['Hotels & Stays'],
+  shopping:             ['Shopping & Retail'],
+  health_wellness:      ['Health & Wellness'],
+  business_services:    ['Business Services'],
+  public_essential:     ['Essential Services'],
+  culture_heritage:     ['Culture & Heritage'],
+  events_entertainment: ['Entertainment & Events'],
+  transport_mobility:   ['Transport & Mobility'],
+};
 
 // Fetch businesses from Supabase
 export async function getBusinessesFromSupabase(options?: {
@@ -50,26 +80,33 @@ export async function getBusinessesFromSupabase(options?: {
   try {
     let query = supabase
       .from('businesses')
-      .select('*', { count: 'exact' });
+      .select('*', { count: 'exact' })
+      .eq('is_published', true)
+      .not('phone', 'is', null);
 
+    // ✅ FIXED: Map UI category ID → real DB category name(s)
     if (options?.category && options.category !== 'all') {
-      query = query.ilike('category', `%${options.category}%`);
+      const dbCategories = UI_CATEGORY_TO_DB[options.category];
+      if (dbCategories && dbCategories.length > 0) {
+        query = query.in('category', dbCategories);
+      }
     }
-    
+
     if (options?.city) {
       query = query.ilike('city', `%${options.city}%`);
     }
-    
+
     if (options?.governorate && options.governorate !== 'all') {
       query = query.ilike('governorate', `%${options.governorate}%`);
     }
 
     const page = options?.page || 1;
-    const pageSize = options?.pageSize || 50;  // Show 50 businesses per page
+    const pageSize = options?.pageSize || 50;
     const start = (page - 1) * pageSize;
-    
-    query = query.range(start, start + pageSize - 1);
-    query = query.order('name', { ascending: true });
+
+    query = query
+      .range(start, start + pageSize - 1)
+      .order('name', { ascending: true });
 
     const { data, error, count } = await query;
 
@@ -93,14 +130,16 @@ export async function getCategoryCounts(): Promise<Record<string, number>> {
   try {
     const { data, error } = await supabase
       .from('businesses')
-      .select('category');
+      .select('category')
+      .eq('is_published', true);
 
     if (error) throw error;
 
     const counts: Record<string, number> = {};
     data?.forEach((biz: any) => {
-      const cat = biz.category || 'Uncategorized';
-      counts[cat] = (counts[cat] || 0) + 1;
+      // Map DB category name → UI ID for counts
+      const uiCat = DB_CATEGORY_TO_UI[biz.category] || biz.category || 'Uncategorized';
+      counts[uiCat] = (counts[uiCat] || 0) + 1;
     });
 
     return counts;

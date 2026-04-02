@@ -61,16 +61,17 @@ const resolveGovernorateFilter = (value?: string) => {
   return governorateValueMap[value.toLowerCase()] || value;
 };
 
+// ✅ FIXED: Maps UI short-IDs → real DB category names (full English strings)
 const categoryValueMap: Record<string, string[]> = {
-  food_drink: ['food_drink', 'Food & Drink'],
-  shopping: ['shopping', 'Shopping'],
-  events_entertainment: ['events_entertainment', 'Events & Entertainment'],
-  hotels_stays: ['hotels_stays', 'Hotels & Stays'],
-  culture_heritage: ['culture_heritage', 'Culture & Heritage'],
-  business_services: ['business_services', 'Business Services'],
-  health_wellness: ['health_wellness', 'Health & Wellness'],
-  transport_mobility: ['transport_mobility', 'Transport & Mobility'],
-  public_essential: ['public_essential', 'Public & Essential'],
+  food_drink:           ['Restaurants & Dining', 'Cafés & Coffee'],
+  shopping:             ['Shopping & Retail'],
+  events_entertainment: ['Entertainment & Events'],
+  hotels_stays:         ['Hotels & Stays'],
+  culture_heritage:     ['Culture & Heritage'],
+  business_services:    ['Business Services'],
+  health_wellness:      ['Health & Wellness'],
+  transport_mobility:   ['Transport & Mobility'],
+  public_essential:     ['Essential Services'],
 };
 
 const resolveCategoryFilter = (value?: string) => {
@@ -110,8 +111,9 @@ export const api = {
         query = query.eq('governorate', governorateFilter);
       }
 
+      // ✅ FIXED: DB uses is_published (not isFeatured)
       if (params.featuredOnly) {
-        query = query.eq('isFeatured', true);
+        query = query.eq('is_published', true);
       }
 
       const searchStr = params.city?.trim();
@@ -128,7 +130,7 @@ export const api = {
 
       const mapped = (data || []).map((row: any) => ({
         ...row,
-        isVerified: row.isVerified ?? false,
+        isVerified: row.verified ?? row.isVerified ?? false,
       })) as Business[];
 
       const nextOffset = mapped.length === pageSize ? offset + mapped.length : undefined;
@@ -161,7 +163,7 @@ export const api = {
         const posts = (data || []).map((row: any) => ({
           ...row,
           createdAt: toDate(row.createdAt),
-          isVerified: row.isVerified ?? false,
+          isVerified: row.verified ?? row.isVerified ?? false,
           likes: row.likes ?? 0,
         })) as Post[];
 
@@ -249,7 +251,7 @@ export const api = {
     }
   },
 
-  async createPost(postData: Partial<Post>, authorRole?: User['role']) {
+  async createPost(postData: Partial<Post>, authorRole?: User['role'], authorId?: string) {
     const path = 'posts';
 
     try {
@@ -261,6 +263,7 @@ export const api = {
         .from(path)
         .insert({
           ...postData,
+          authorId: authorId,
           createdAt: new Date().toISOString(),
           likes: postData.likes ?? 0,
         })
@@ -281,8 +284,9 @@ export const api = {
     const path = `users/${authUser.id}`;
 
     try {
-      const adminEmail = 'safaribosafar@gmail.com';
-      const isAdminEmail = authUser.email === adminEmail && Boolean(authUser.email_confirmed_at);
+      const ADMIN_EMAILS = import.meta.env.VITE_ADMIN_EMAILS?.split(',') || ['safaribosafar@gmail.com'];
+
+      const isAdminEmail = authUser.email && ADMIN_EMAILS.includes(authUser.email) && Boolean(authUser.email_confirmed_at);
 
       const { data: existingUser, error: selectError } = await supabase
         .from('users')
@@ -339,7 +343,7 @@ export const api = {
     }
   },
 
-  async upsertPostcard(postcard: BusinessPostcard) {
+  async upsertPostcard(postcard: BusinessPostcard, ownerId?: string) {
     const path = 'business_postcards';
 
     try {
@@ -348,6 +352,7 @@ export const api = {
       const payload = {
         ...postcard,
         id: postcard.id || docId,
+        ownerId: ownerId,
         updatedAt: new Date().toISOString(),
       };
 
@@ -403,6 +408,4 @@ export const api = {
     } catch (error) {
       handleSupabaseError(error, OperationType.WRITE, path);
       return { success: false };
-    }
-  },
-};
+ 
