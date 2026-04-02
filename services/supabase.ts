@@ -81,7 +81,6 @@ export async function getBusinessesFromSupabase(options?: {
     let query = supabase
       .from('businesses')
       .select('*', { count: 'exact' })
-      .eq('is_published', true)
       .not('phone', 'is', null);
 
     // ✅ FIXED: Map UI category ID → real DB category name(s)
@@ -130,8 +129,7 @@ export async function getCategoryCounts(): Promise<Record<string, number>> {
   try {
     const { data, error } = await supabase
       .from('businesses')
-      .select('category')
-      .eq('is_published', true);
+      .select('category');
 
     if (error) throw error;
 
