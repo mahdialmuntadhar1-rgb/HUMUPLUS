@@ -257,15 +257,6 @@ export const categories: Category[] = [
   },
   { id: 'hospitals', icon: <Hospital />, nameKey: 'categories.hospitals', eventCount: 50,
     subcategories: [
-      { id: 'public_hospitals', icon: <>🏥</>, nameKey: 'subcategories.public_hospitals', count: 15 },
-      { id: 'private_hospitals', icon: <>💎</>, nameKey: 'subcategories.private_hospitals', count: 20 },
-      { id: 'specialized_hospitals', icon: <>🫀</>, nameKey: 'subcategories.specialized_hospitals', count: 8 },
-    ]
-  },
-  { id: 'others', icon: <>📦</>, nameKey: 'categories.others', eventCount: 100,
-    subcategories: [
-      { id: 'miscellaneous', icon: <>📦</>, nameKey: 'subcategories.miscellaneous', count: 50 },
-      { id: 'uncategorized', icon: <>❓</>, nameKey: 'subcategories.uncategorized', count: 30 },
     ]
   },
 ];
@@ -403,7 +394,7 @@ export const translations = {
         lawyers: "Lawyers",
         clinics: "Clinics",
         hospitals: "Hospitals",
-        others: "Others",
+        cafe: "Coffee & Cafes",
     },
     subcategories: {
         selectOne: "Select a subcategory",
@@ -568,9 +559,10 @@ export const translations = {
         public_hospitals: "Public Hospitals",
         private_hospitals: "Private Hospitals",
         specialized_hospitals: "Specialized Hospitals",
-        // NEW: Others
-        miscellaneous: "Miscellaneous",
-        uncategorized: "Uncategorized",
+        // NEW: Cafe
+        coffee_shops: "Coffee Shops",
+        tea_houses: "Tea Houses",
+        internet_cafes: "Internet Cafes",
     },
     featured: {
         title: "Featured Businesses",

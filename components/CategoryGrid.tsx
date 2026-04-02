@@ -21,7 +21,7 @@ const SkeletonCard: React.FC = () => (
     </div>
 );
 
-const ITEMS_PER_PAGE = 9;
+const ITEMS_PER_PAGE = 100;
 
 export const CategoryGrid: React.FC<CategoryGridProps> = ({ onCategoryClick, currentPage, setCurrentPage }) => {
     const [loading, setLoading] = useState(true);
@@ -55,12 +55,11 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({ onCategoryClick, cur
             'health_wellness': ['hospital', 'pharmacy', 'gym', 'health', 'wellness', 'clinic'],
             'transport_mobility': ['fuel', 'bus_station', 'transport', 'car', 'taxi', 'mobility'],
             'public_essential': ['school', 'public', 'essential', 'government', 'siren'],
-            // NEW: 5 additional categories
             'doctors': ['doctor', 'physician', 'medical doctor', 'gp', 'general practitioner'],
             'lawyers': ['lawyer', 'attorney', 'legal', 'law firm', 'advocate'],
             'clinics': ['clinic', 'medical clinic', 'health clinic', 'specialty clinic'],
             'hospitals': ['hospital', 'medical center', 'health center', 'infirmary'],
-            'others': ['other', 'misc', 'miscellaneous', 'uncategorized', 'general'],
+            'cafe': ['cafe', 'coffee', 'coffee shop', 'cafes'],
         };
         
         const possibleNames = categoryMap[categoryId] || [categoryId];
@@ -73,11 +72,8 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({ onCategoryClick, cur
         return total;
     };
 
-    const totalPages = Math.ceil(categories.length / ITEMS_PER_PAGE);
-    const paginatedCategories = categories.slice(
-      currentPage * ITEMS_PER_PAGE,
-      (currentPage + 1) * ITEMS_PER_PAGE
-    );
+    // Show all categories, no pagination
+    const paginatedCategories = categories;
 
     return (
         <div className="container mx-auto px-4 py-12">
@@ -155,27 +151,6 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({ onCategoryClick, cur
                     )}
                 </AnimatePresence>
             </div>
-            
-            {totalPages > 1 && (
-                <div className="flex justify-center gap-2 mt-8">
-                    {Array.from({ length: totalPages }).map((_, index) => (
-                        <motion.button
-                            key={index}
-                            onClick={() => setCurrentPage(index)}
-                            whileHover={{ scale: 1.2 }}
-                            whileTap={{ scale: 0.9 }}
-                            className={`
-                            w-2 h-2 rounded-full transition-all duration-300
-                            ${currentPage === index 
-                                ? 'w-8 bg-primary' 
-                                : 'bg-white/20 hover:bg-white/40'
-                            }
-                            `}
-                            aria-label={`Go to page ${index + 1}`}
-                        />
-                    ))}
-                </div>
-            )}
         </div>
     );
 };

@@ -28,7 +28,7 @@ const DB_CATEGORY_TO_UI: Record<string, string> = {
   'Lawyers':                'lawyers',
   'Clinics':                'clinics',
   'Hospitals':              'hospitals',
-  'Others':                 'others',
+  'Cafe':                   'cafe',
   // Lowercase (from 18-AGENTS scraper)
   'restaurants':            'food_drink',
   'cafes':                  'food_drink',
@@ -43,7 +43,7 @@ const DB_CATEGORY_TO_UI: Record<string, string> = {
   'lawyers':                'lawyers',
   'clinics':                'clinics',
   'hospitals':              'hospitals',
-  'others':                 'others',
+  'cafe':                   'cafe',
 };
 
 // Transform Supabase business row → HUMUPLUS Business format
@@ -106,7 +106,7 @@ const UI_CATEGORY_TO_DB: Record<string, string[]> = {
   lawyers:              ['Lawyers', 'lawyers', 'lawyer'],
   clinics:              ['Clinics', 'clinics', 'clinic'],
   hospitals:            ['Hospitals', 'hospitals', 'hospital'],
-  others:               ['Others', 'others', 'other', 'miscellaneous', 'uncategorized'],
+  cafe:                 ['Cafe', 'cafe', 'coffee shop', 'cafes'],
 };
 
 // Fetch businesses from Supabase
