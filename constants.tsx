@@ -257,6 +257,16 @@ export const categories: Category[] = [
   },
   { id: 'hospitals', icon: <Hospital />, nameKey: 'categories.hospitals', eventCount: 50,
     subcategories: [
+      { id: 'public_hospitals', icon: <>🏥</>, nameKey: 'subcategories.public_hospitals', count: 15 },
+      { id: 'private_hospitals', icon: <>💎</>, nameKey: 'subcategories.private_hospitals', count: 20 },
+      { id: 'specialized_hospitals', icon: <>🫀</>, nameKey: 'subcategories.specialized_hospitals', count: 8 },
+    ]
+  },
+  { id: 'cafe', icon: <Coffee />, nameKey: 'categories.cafe', eventCount: 60,
+    subcategories: [
+      { id: 'coffee_shops', icon: <>☕</>, nameKey: 'subcategories.coffee_shops', count: 35 },
+      { id: 'tea_houses', icon: <>🫖</>, nameKey: 'subcategories.tea_houses', count: 15 },
+      { id: 'internet_cafes', icon: <>💻</>, nameKey: 'subcategories.internet_cafes', count: 10 },
     ]
   },
 ];
