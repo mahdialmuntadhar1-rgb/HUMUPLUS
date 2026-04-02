@@ -10,8 +10,9 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// ─── DB category (full name) → UI short-ID ───────────────────────────────────
+// ─── DB category (full name OR lowercase) → UI short-ID ──────────────────────
 const DB_CATEGORY_TO_UI: Record<string, string> = {
+  // Full names (from manual import)
   'Restaurants & Dining':   'food_drink',
   'Cafés & Coffee':         'food_drink',
   'Hotels & Stays':         'hotels_stays',
@@ -22,33 +23,53 @@ const DB_CATEGORY_TO_UI: Record<string, string> = {
   'Culture & Heritage':     'culture_heritage',
   'Entertainment & Events': 'events_entertainment',
   'Transport & Mobility':   'transport_mobility',
+  // Lowercase (from 18-AGENTS scraper)
+  'restaurants':            'food_drink',
+  'cafes':                  'food_drink',
+  'bakeries':               'food_drink',
+  'hotels':                 'hotels_stays',
+  'gyms':                   'health_wellness',
+  'beauty_salons':          'health_wellness',
+  'pharmacies':             'public_essential',
+  'supermarkets':           'shopping',
 };
 
 // Transform Supabase business row → HUMUPLUS Business format
+// Handles BOTH 18-AGENTS schema (business_name, lowercase category) 
+// AND manual import schema (name, full category names)
 function transformBusiness(data: any): Business {
+  // 18-AGENTS uses 'business_name', manual import uses 'name'
+  const name = data.business_name || data.name || '';
+  
+  // 18-AGENTS uses lowercase categories like 'restaurants', manual uses 'Restaurants & Dining'
+  const category = data.category || '';
+  const uiCategory = DB_CATEGORY_TO_UI[category] || 
+                     DB_CATEGORY_TO_UI[category.toLowerCase()] || 
+                     'business_services';
+  
   return {
-    id: String(data.id || data.fsq_id || ''),
-    name: data.name || '',
-    nameAr: data.name_ar || data.nameAr || '',
-    nameKu: data.name_ku || data.nameKu || '',
-    // Map full DB category name → UI short ID (fallback: keep original)
-    category: DB_CATEGORY_TO_UI[data.category] || data.category || 'business_services',
-    subcategory: data.subcategory || data.user_category || '',
+    id: String(data.id || ''),
+    name: name,
+    nameAr: data.name_ar || '',
+    nameKu: data.name_ku || '',
+    category: uiCategory,
+    subcategory: data.subcategory || '',
     governorate: data.governorate || '',
     city: data.city || '',
     address: data.address || '',
     phone: data.phone || '',
     website: data.website || '',
-    // ✅ FIXED: DB uses latitude/longitude (NOT lat/lng)
-    lat: data.latitude ?? data.lat ?? 0,
-    lng: data.longitude ?? data.lng ?? 0,
+    // ✅ Handle both schemas: latitude/longitude (18-AGENTS uses same names)
+    lat: data.latitude ?? 0,
+    lng: data.longitude ?? 0,
     rating: data.rating || 4.0,
-    reviewCount: data.review_count || data.reviewCount || 0,
-    isVerified: data.verified ?? data.isVerified ?? false,
-    isFeatured: data.is_published ?? data.isFeatured ?? false,
-    imageUrl: data.image_url || data.imageUrl || `https://picsum.photos/seed/${data.id || 'business'}/400/300`,
+    reviewCount: data.review_count || 0,
+    // 18-AGENTS: verification_status, manual: verified
+    isVerified: data.verified || data.verification_status === 'verified' || false,
+    isFeatured: data.is_published || false,
+    // 18-AGENTS: images[], manual: image_url
+    imageUrl: data.image_url || (data.images && data.images[0]) || `https://picsum.photos/seed/${data.id || 'business'}/400/300`,
     description: data.description || data.address || '',
-    descriptionAr: data.description_ar || '',
     status: data.status || 'active',
     distance: data.distance || 0,
     whatsapp: data.whatsapp || data.phone || '',
@@ -56,14 +77,15 @@ function transformBusiness(data: any): Business {
   };
 }
 
-// ─── UI short-ID → DB full category name(s) ──────────────────────────────────
+// ─── UI short-ID → DB category name(s) ───────────────────────────────────────
+// Includes BOTH full names (manual import) AND lowercase (18-AGENTS scraper)
 const UI_CATEGORY_TO_DB: Record<string, string[]> = {
-  food_drink:           ['Restaurants & Dining', 'Cafés & Coffee'],
-  hotels_stays:         ['Hotels & Stays'],
-  shopping:             ['Shopping & Retail'],
-  health_wellness:      ['Health & Wellness'],
+  food_drink:           ['Restaurants & Dining', 'Cafés & Coffee', 'restaurants', 'cafes', 'bakeries'],
+  hotels_stays:         ['Hotels & Stays', 'hotels'],
+  shopping:             ['Shopping & Retail', 'supermarkets'],
+  health_wellness:      ['Health & Wellness', 'gyms', 'beauty_salons'],
   business_services:    ['Business Services'],
-  public_essential:     ['Essential Services'],
+  public_essential:     ['Essential Services', 'pharmacies'],
   culture_heritage:     ['Culture & Heritage'],
   events_entertainment: ['Entertainment & Events'],
   transport_mobility:   ['Transport & Mobility'],
