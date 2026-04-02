@@ -128,5 +128,4 @@ export const Header: React.FC<HeaderProps> = ({ isLoggedIn, user, onSignIn, onSi
             </div>
         </header>
     );
-}
-
+};
